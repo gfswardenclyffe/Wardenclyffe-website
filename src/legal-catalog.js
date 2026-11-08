@@ -160,7 +160,7 @@ function translateUi(){
 function render(){
  const i=language.indexOf(current),v=ui[current],term=search.value.trim().toLocaleLowerCase(),selected=country.value;
  const filtered=groups.filter(g=>(g[0]===selected)&&(topic.value==='all'||g[1]===topic.value)&&
- (!term||g[2][i].toLocaleLowerCase().includes(term)||g[3+i].toLocaleLowerCase().includes(term)||g[2][0].toLowerCase().includes(term)||g[3].toLowerCase().includes(term)));
+ (!term||g[2][i].toLocaleLowerCase().includes(term)||g[3][i].toLocaleLowerCase().includes(term)||g[2][0].toLowerCase().includes(term)||g[3][0].toLowerCase().includes(term)));
  const fragment=document.createDocumentFragment();
  for(const g of filtered){
   const article=document.createElement('article');article.className='legal-category';
@@ -169,7 +169,7 @@ function render(){
   const heading=document.createElement('h3');heading.textContent=g[2][i];
   const kicker=document.createElement('p');kicker.className='legal-typology-label';kicker.textContent=v.items;
   const list=document.createElement('ul');list.className='legal-types';
-  for(const name of g[3+i].split('; ')){const li=document.createElement('li');li.textContent=name;list.append(li)}
+  for(const name of g[3][i].split('; ')){const li=document.createElement('li');li.textContent=name;list.append(li)}
   const status=document.createElement('p');status.className='legal-availability';status.textContent=v.status;
   const action=document.createElement('a');const params=new URLSearchParams({topic:'Legal consultation: '+g[2][0],lang:current});
   action.href='contact.html?'+params.toString();action.textContent=v.inquiry;
