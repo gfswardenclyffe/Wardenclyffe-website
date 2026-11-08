@@ -1,0 +1,13 @@
+{
+  "name": "wardenclyffe-netlify-preview",
+  "version": "5.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-site.mjs",
+    "test": "node --test netlify/functions/__tests__/*.test.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.1.7"
+  }
+}

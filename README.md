@@ -39,3 +39,9 @@ Real provider *sandbox* API routes, webhook checks, a D1 order ledger, and sampl
 
 ## V4.9 — simpler hosted test checkout
 The Netlify deployment builds from `dist/` via `netlify.toml`. There is **no Cloudflare, Openpay, BBVA, or bank-transfer integration** in this checkout. All server secrets belong in Netlify UI environment variables, not in GitHub. See `netlify/PAYMENT_SETUP.md`. **No real contracts or real money are supported.**
+
+## V5.0 — Stripe sandbox notifications (infrastructure; not yet connected)
+
+After a verified $1 sandbox payment, the **signed Stripe webhook** can send two separate emails using Resend: a confirmation to an expressly allowlisted test customer and an internal test alert for Wardenclyffe. Netlify Blobs stores a minimal private sandbox order record and helps deduplicate notifications. **No real legal document is attached or due.** This is disabled until the email credentials, verified sender domain, Stripe webhook signing secret and sandbox allowlist are configured in Netlify.
+
+See [netlify/EMAIL_NOTIFICATIONS_SETUP.md](netlify/EMAIL_NOTIFICATIONS_SETUP.md). PayPal notifications and actual contracted deliverables remain later implementation steps.
