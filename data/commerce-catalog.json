@@ -1,0 +1,177 @@
+{
+  "pricingStatus": "Proposed / not approved. No live payment is enabled.",
+  "currencies": [
+    "USD"
+  ],
+  "regions": [
+    "us",
+    "mx",
+    "eu"
+  ],
+  "contracts": [
+    {
+      "id": "nda",
+      "title": "Non-Disclosure Agreement",
+      "category": "business",
+      "draftPriceUsd": 39,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    },
+    {
+      "id": "services",
+      "title": "Professional Services Agreement",
+      "category": "employment",
+      "draftPriceUsd": 69,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    },
+    {
+      "id": "consultant",
+      "title": "Independent Contractor Agreement",
+      "category": "employment",
+      "draftPriceUsd": 59,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    },
+    {
+      "id": "employment",
+      "title": "Employment Agreement",
+      "category": "employment",
+      "draftPriceUsd": 79,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    },
+    {
+      "id": "lease",
+      "title": "Commercial Lease Agreement",
+      "category": "property",
+      "draftPriceUsd": 79,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    },
+    {
+      "id": "purchase",
+      "title": "Purchase & Sale Agreement",
+      "category": "property",
+      "draftPriceUsd": 89,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    },
+    {
+      "id": "loan",
+      "title": "Loan & Promissory Note",
+      "category": "property",
+      "draftPriceUsd": 59,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    },
+    {
+      "id": "shareholders",
+      "title": "Shareholders’ Agreement",
+      "category": "business",
+      "draftPriceUsd": 129,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    },
+    {
+      "id": "debt",
+      "title": "Debt Settlement & Payment Plan",
+      "category": "business",
+      "draftPriceUsd": 69,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    },
+    {
+      "id": "software",
+      "title": "Software Development Agreement",
+      "category": "technology",
+      "draftPriceUsd": 99,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    },
+    {
+      "id": "saas",
+      "title": "SaaS & Software License",
+      "category": "technology",
+      "draftPriceUsd": 119,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    },
+    {
+      "id": "ipassignment",
+      "title": "Intellectual Property Assignment",
+      "category": "technology",
+      "draftPriceUsd": 89,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    },
+    {
+      "id": "data-processing",
+      "title": "Data Processing Agreement",
+      "category": "technology",
+      "draftPriceUsd": 99,
+      "regions": [
+        "us",
+        "eu"
+      ]
+    },
+    {
+      "id": "distribution",
+      "title": "Distribution Agreement",
+      "category": "business",
+      "draftPriceUsd": 129,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    },
+    {
+      "id": "settlement",
+      "title": "Settlement & Release Agreement",
+      "category": "business",
+      "draftPriceUsd": 79,
+      "regions": [
+        "us",
+        "mx",
+        "eu"
+      ]
+    }
+  ]
+}

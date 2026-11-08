@@ -1,21 +1,25 @@
-# Wardenclyffe — A Living Field of Ideas
+# Wardenclyffe — A Living Field of Ideas (v4.5)
 
-An original animated Wardenclyffe site: a soft teal moving lake, a growing electrical tree, a living particle flock, and four supporting pages.
+Static GitHub Pages site with one immersive Living Tree homepage and four interactive sections: **Services, Work, Shop, Contact**.
 
-## Pages
+## What works now
+- Original living-cell animations on all pages.
+- Services: Consultancy, Business, Cybersecurity & Encryption, UX & Digital Experiences.
+- Work: six confidentiality-conscious types of representative work.
+- Shop: 15 proposed contracts filtered by U.S., Mexico, or Europe, category; draft prices; three purchase paths (template, customization, review); working checkout preview and gateway choices.
+- Contact: email-draft inquiry with preset topic.
+- Shared deep-teal footer with existing legal-policy links.
 
-- Home: animated Living Field with five automatic chapters.
-- Services: legal, corporate, translation, technology, and emerging security services.
-- Work: a confidentiality-first introduction to selected areas of work.
-- Shop: planned digital templates and services; no checkout or document intake is active.
-- Contact: email-based inquiry; no booking scheduler is active.
+**No live payments or actual document fulfillment.** All draft prices require business/legal approval and each product requires validated jurisdiction-specific materials.
 
-## GitHub Pages
+## Payments sandbox (separate deployment)
 
-This is a static site. Under **Settings → Pages**, choose **Deploy from a branch → main → /(root)**. No build process is required.
+The `payment-worker` folder holds a Cloudflare Worker for **Stripe test Checkout**, **PayPal Sandbox**, D1 orders and verified email attachment delivery via Resend. The GitHub Pages UI is configured in preview mode by default. Full setup is documented in `payment-worker/README.md`. The only server SKU is `sandbox-demo`, a $1.00 virtual test transaction delivering a plain text sample explicitly marked **not a legal contract**. No live-charge credentials are accepted. Never commit secrets.
 
-## Privacy and development
+## Preview
 
-Never add client files, credentials, business secrets, or personal documents to this public repository. Paid checkout, document submission, and appointment booking need secure backend infrastructure before activation.
+Serve the repository over HTTP locally, or use GitHub Pages (Settings → Pages → main / root). As a static site it does not need a build step. Configure payment backend separately when ready.
 
-The animated visual system is original Canvas code and respects reduced-motion preferences. This site is being developed iteratively.
+## Privacy
+
+Do not upload client material or approved legal templates to public GitHub. The pages do not send user data to a server; the Contact inquiry composer creates a mailto draft. Actual payment processing will require the verified server, reviewed policies and domain/email configuration.

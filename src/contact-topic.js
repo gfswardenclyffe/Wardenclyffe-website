@@ -1,0 +1,1 @@
+(()=>{const p=new URLSearchParams(location.search),topic=p.get('topic'),s=document.querySelector('select[name=topic]');if(!topic||!s)return;let o=[...s.options].find(x=>x.value.toLowerCase()===topic.toLowerCase());if(!o){o=new Option(topic,topic);s.add(o)}s.value=o.value})();
