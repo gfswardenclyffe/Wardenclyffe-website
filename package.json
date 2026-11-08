@@ -9,5 +9,8 @@
   },
   "dependencies": {
     "@netlify/blobs": "11.1.7"
+  },
+  "overrides": {
+    "@netlify/otel": "7.0.6"
   }
 }
