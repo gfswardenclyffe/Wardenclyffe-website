@@ -1,6 +1,15 @@
-node_modules/
-dist/
-.DS_Store
+# Ignore secrets and private data
 .env
 .env.*
 !.env.example
+.DS_Store
+node_modules/
+dist/
+private/
+client-files/
+client-records/
+clients/
+case-files/
+**/*secret*
+**/*.key
+**/*.pem

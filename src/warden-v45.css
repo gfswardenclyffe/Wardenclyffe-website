@@ -67,3 +67,36 @@
 .gateway-result ol{padding-left:23px}
 @media(max-width:590px){#gateway-choices.gateway-choices,.customer-grid{grid-template-columns:1fr}.checkout-shell{padding:28px 21px}.checkout-section-heading{align-items:start;flex-direction:column}}
 .payment-step[hidden]{display:none}
+
+/* V4.9 — clean, Shopify-inspired layout, Wardenclyffe colors. Provider-hosted payments only. */
+.checkout-dialog{width:min(1040px,calc(100vw - 20px));max-height:92vh;border:1px solid #c5dcdd; background:#fff}
+.checkout-shell{padding:clamp(22px,3.8vw,50px)}
+.checkout-headbar{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.checkout-dialog .language-switch{display:flex;flex-direction:row;align-items:center;gap:8px;font:600 12px Arial,sans-serif}
+.checkout-dialog .language-switch select{min-width:110px;width:auto;padding:8px 10px}
+.checkout-layout{display:grid;grid-template-columns:1.3fr 1fr;gap:clamp(25px,4vw,50px)}
+.checkout-shell h2{font-size:clamp(35px,4vw,53px);margin-bottom:28px}
+.checkout-flow{min-width:0;display:grid;gap:18px}
+.checkout-flow label:not(.gateway-choice){display:flex;flex-direction:column;gap:8px}
+.checkout-flow input,.checkout-flow select{width:100%;min-width:0}
+.express-heading{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:9px;font:600 16px Georgia,serif}
+.express-chip{border:1px solid #c7aa72;border-radius:20px;color:#896b3c;padding:6px 10px;font:700 10px ui-monospace,monospace}
+#gateway-choices.gateway-choices{grid-template-columns:repeat(2,minmax(0,1fr))}
+.checkout-dialog label.gateway-choice{padding:13px 10px;min-height:91px;border-radius:12px}
+.gateway-choice .gateway-icon{min-width:24px;width:24px;height:24px;flex-basis:24px}
+.gateway-choice strong{font-size:12px}.gateway-choice small{font-size:10px}
+.checkout-divider{display:flex;align-items:center;gap:12px;color:#50737b;letter-spacing:.15em;font:700 10px ui-monospace,monospace}
+.checkout-divider:before,.checkout-divider:after{content:'';height:1px;flex:1;background:#c4dade}
+.checkout-summary{background:#f2f8f7;border:1px solid #d2e6e3;border-radius:20px;padding:25px;align-self:start;display:flex;flex-direction:column;gap:15px}
+.checkout-summary h3{margin:0;color:#16394c;font:italic 26px/1.15 Georgia,serif}
+.checkout-summary>p{font:12px/1.6 Arial,sans-serif;color:#627b82;margin:0}
+.checkout-line{display:flex;align-items:start;justify-content:space-between;gap:15px;padding-top:12px;border-top:1px solid #c6dbd9;font:12px/1.5 Arial,sans-serif}
+.checkout-line strong{white-space:nowrap;color:#123f47}
+.checkout-line:nth-of-type(2){font-size:15px;font-weight:700}
+.checkout-summary>a{color:#0d7780;font:700 11px Arial,sans-serif}
+.checkout-actions{display:flex;gap:10px}.checkout-actions button{flex:1}
+.checkout-trust{font:11px/1.6 Arial,sans-serif;color:#52767a}
+@media(max-width:760px){.checkout-layout{grid-template-columns:1fr}.checkout-headbar{align-items:start;flex-wrap:wrap}#gateway-choices.gateway-choices{grid-template-columns:1fr 1fr}}
+@media(max-width:420px){#gateway-choices.gateway-choices{grid-template-columns:1fr}}
+
+.checkout-policy-links{display:flex;flex-wrap:wrap;gap:12px 20px}.checkout-policy-links a{color:#0d7780;font:700 11px Arial,sans-serif}

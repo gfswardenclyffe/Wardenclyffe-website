@@ -1,0 +1,11 @@
+/** Public sandbox code; never place actual merchant credentials here. */
+export const SAMPLE=Object.freeze({sku:'sandbox-demo',name:'Wardenclyffe payment test — nonlegal sample',currency:'usd',amount:100});
+export function respond(data,status=200){return new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}})}
+export const emailOK=value=>typeof value==='string'&&value.length<=180&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+export function config(){return {mode:process.env.PAYMENTS_MODE==='sandbox',stripe:process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_')===true,paypal:Boolean(process.env.PAYPAL_CLIENT_ID&&process.env.PAYPAL_CLIENT_SECRET)}}
+export function requireMode(provider){const c=config();if(!c.mode)throw Error('Test mode is not enabled');if(provider&&!c[provider])throw Error('Sandbox merchant credentials are missing')}
+export function baseUrl(){const text=process.env.APP_BASE_URL||process.env.URL||'https://wardenclyffe-preview.netlify.app';const u=new URL(text);if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash)throw Error('HTTPS site URL required');return u.origin}
+export async function input(req){const text=await req.text();if(text.length>4096)throw Error('Request too large');return JSON.parse(text)}
+export async function createPayload(req){const data=await input(req);if(data.sku!==SAMPLE.sku||!emailOK(data.email))throw Error('A valid email and the test-only product are required');return {email:data.email.trim().toLowerCase()}}
+export async function paypalToken(){requireMode('paypal');const basic=Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64');const r=await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded','authorization':`Basic ${basic}`},body:'grant_type=client_credentials'});const data=await r.json();if(!r.ok||!data.access_token)throw Error('PayPal sandbox authorization failed');return data.access_token}
+export function validCheckoutUrl(value,provider){const u=new URL(value);const allowed=provider==='stripe'?['checkout.stripe.com']:['www.paypal.com','www.sandbox.paypal.com','sandbox.paypal.com'];return u.protocol==='https:'&&allowed.includes(u.hostname)}

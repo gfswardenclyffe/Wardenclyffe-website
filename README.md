@@ -35,3 +35,7 @@ To switch the legal page URLs to public final policies, remove the draft note an
 The Shop now contains six country-aware payment choices (Stripe, PayPal, Openpay cards, Openpay SPEI, Chase and BBVA transfers), plus DIY legal-filings concept cards. Clicking a contract opens a clear payment-method chooser and a **simulation-only checkout walkthrough**. With the public `src/commerce-config.js` left in preview mode, no account is charged and no message is emailed.
 
 Real provider *sandbox* API routes, webhook checks, a D1 order ledger, and sample-document email delivery are in `payment-worker/`. See `payment-worker/README.md` for the safe deployment process. The public Netlify website is static, so a separate Worker and private credentials are required for actual sandbox transactions. There is no live legal contract fulfillment yet.
+
+
+## V4.9 — simpler hosted test checkout
+The Netlify deployment builds from `dist/` via `netlify.toml`. There is **no Cloudflare, Openpay, BBVA, or bank-transfer integration** in this checkout. All server secrets belong in Netlify UI environment variables, not in GitHub. See `netlify/PAYMENT_SETUP.md`. **No real contracts or real money are supported.**

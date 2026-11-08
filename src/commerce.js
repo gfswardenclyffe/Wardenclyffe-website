@@ -1,6 +1,6 @@
-/* Wardenclyffe V4.8 – gateway selection, safe sandbox checkout, demo walkthrough. */
+/* Wardenclyffe V4.9 — two-gateway Stripe / PayPal sandbox checkout. */
 (()=>{'use strict';
-const contractList=[
+const contracts=[
 ['nda','Non-Disclosure Agreement','business',39,'us mx eu'],
 ['services','Professional Services Agreement','employment',69,'us mx eu'],
 ['consultant','Independent Contractor Agreement','employment',59,'us mx eu'],
@@ -17,68 +17,31 @@ const contractList=[
 ['distribution','Distribution Agreement','business',129,'us mx eu'],
 ['settlement','Settlement & Release Agreement','business',79,'us mx eu']
 ].map(([id,title,category,price,regions])=>({id,title,category,price,regions:regions.split(' ')}));
-const region=document.getElementById('contract-region'),category=document.getElementById('contract-category'),grid=document.getElementById('contract-products');
-const dialog=document.getElementById('checkout-dialog'),form=document.getElementById('checkout-form'),msg=document.getElementById('checkout-message');
+const $=id=>document.getElementById(id), region=$('contract-region'),category=$('contract-category'),grid=$('contract-products'),dialog=$('checkout-dialog'),form=$('checkout-form'),msg=$('checkout-message');
 if(!region||!category||!grid||!dialog||!form)return;
-const primary=document.getElementById('checkout-primary'),demo=document.getElementById('checkout-demo');
-const gatewayChoices=document.getElementById('gateway-choices'),identity=document.getElementById('openpay-customer-fields'),paymentCountry=document.getElementById('payment-country');
-const sampleNote=document.getElementById('gateway-sample-note');
-let chosen=null, busy=false;
-const config=window.WARDEN_COMMERCE||{mode:'preview',apiBase:'',paymentsEnabled:false};
-const api=String(config.apiBase||'').replace(/\/$/,'');
-const sandboxReady=config.mode==='sandbox'&&api.startsWith('https://');
-const methods={
-stripe:{name:'Card · Apple Pay · Google Pay',countries:['us','mx','other'],endpoint:'stripe',amount:'$1 USD',redirect:true},
-paypal:{name:'PayPal',countries:['us','mx','other'],endpoint:'paypal',amount:'$1 USD',redirect:true},
-openpay_card:{name:'Openpay · Cards in Mexico',countries:['mx'],endpoint:'openpay/card',amount:'MXN $10',redirect:true},
-openpay_spei:{name:'Openpay · SPEI reference',countries:['mx'],endpoint:'openpay/spei',amount:'MXN $10',redirect:false},
-bank_chase:{name:'Chase · Bank transfer (US)',countries:['us'],endpoint:'bank',amount:'$1 USD',redirect:false},
-bank_bbva:{name:'BBVA · Direct bank transfer (MX)',countries:['mx'],endpoint:'bank',amount:'MXN $10',redirect:false}
+const primary=$('checkout-primary'),demo=$('checkout-demo'),language=$('checkout-language');
+let chosen=null,busy=false,ready={stripe:false,paypal:false};
+let lang=new URLSearchParams(location.search).get('lang')==='es'?'es':'en';language.value=lang;
+const words={
+en:{sandboxTitle:'WARDENCLYFFE / SECURE CHECKOUT TEST',language:'Language',checkoutHeading:'A better way to begin.',express:'Express checkout',stripeName:'Card · Apple Pay · Google Pay',stripeDetail:'Hosted securely by Stripe',paypalDetail:'Hosted securely by PayPal',yourDetails:'YOUR DETAILS',delivery:'Service option',template:'Template · email attachment after launch',customize:'Professional customization · request a quote',review:'Legal review · request a consultation',jurisdiction:'Country, state, or applicable law',email:'Email address',startTest:'Start $1 test checkout →',walkthrough:'View walkthrough',trust:'Card information is collected only by the payment provider. No real contracts are sold in this test.',orderSummary:'ORDER SUMMARY',sample:'Sandbox sample — not a legal contract',total:'TOTAL TO TEST',draftWarning:'Proposed contract prices are drafts. Your test payment purchases only a non-legal sandbox sample.',emailLater:'Automatic document delivery will be enabled after successful payment testing and document review.',termsLink:'Terms of Service ↗',privacyLink:'Privacy Policy ↗',notReady:'Gateway not configured. Add sandbox credentials in Netlify environment variables to enable the test.',providerReady:'Test checkout ready. Only a $1 sandbox charge will be attempted.',otherPath:'A professional inquiry will open in your email app; no payment is requested.',trial:'This launches a $1 USD TEST payment for a NON-LEGAL sample. No actual contract will be delivered. Continue?',redirecting:'Opening the secure test payment page…',error:'Unable to start checkout. Check Netlify payment function settings.',wrongJurisdiction:'Choose the appropriate jurisdiction before purchasing.',orderPreview:'Proposed price',explore:'Explore checkout options ↗'},
+es:{sandboxTitle:'WARDENCLYFFE / PRUEBA DE PAGO SEGURO',language:'Idioma',checkoutHeading:'Una mejor forma de comenzar.',express:'Pago exprés',stripeName:'Tarjeta · Apple Pay · Google Pay',stripeDetail:'Pago protegido por Stripe',paypalDetail:'Pago protegido por PayPal',yourDetails:'TUS DATOS',delivery:'Tipo de servicio',template:'Plantilla · envío por correo después del lanzamiento',customize:'Personalización profesional · solicitar cotización',review:'Revisión legal · solicitar consulta',jurisdiction:'País, estado o legislación aplicable',email:'Correo electrónico',startTest:'Iniciar pago de prueba de $1 →',walkthrough:'Ver recorrido',trust:'Los datos de la tarjeta se ingresan solamente en el proveedor de pago. No se venden contratos reales en esta prueba.',orderSummary:'RESUMEN DEL PEDIDO',sample:'Muestra de prueba — no es un contrato',total:'TOTAL DE LA PRUEBA',draftWarning:'Los precios de los contratos son provisionales. El pago de prueba corresponde únicamente a una muestra sin efecto legal.',emailLater:'El envío automático de documentos se habilitará después de probar los pagos y aprobar los documentos.',termsLink:'Términos de servicio ↗',privacyLink:'Aviso de privacidad ↗',notReady:'Pasarela sin configurar. Agrega las credenciales de prueba en las variables de entorno de Netlify.',providerReady:'Pago de prueba listo. Solamente se intentará un cargo simulado de $1.',otherPath:'Se abrirá una solicitud profesional en tu correo, sin cobrarte.',trial:'Se iniciará un pago de PRUEBA por $1 USD para una muestra SIN VALIDEZ LEGAL. No se enviará un contrato real. ¿Continuar?',redirecting:'Abriendo la página segura de pago de prueba…',error:'No fue posible iniciar el pago. Revisa la configuración de las funciones en Netlify.',wrongJurisdiction:'Selecciona la jurisdicción aplicable antes de comprar.',orderPreview:'Precio propuesto',explore:'Explorar opciones de pago ↗'}
 };
-const e=(tag,className,text)=>{const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node};
-function selectedGateway(){return form.querySelector('input[name="gateway"]:checked')?.value||'stripe'}
-function drawProducts(){grid.replaceChildren();const list=contractList.filter(p=>p.regions.includes(region.value)&&(category.value==='all'||p.category===category.value));
-for(const p of list){const tile=e('article','product-tile'),tag=e('span','tag',p.category.replace('-',' ').toUpperCase()),head=e('h3','',p.title),body=e('p','',`Select the applicable ${region.value==='us'?'U.S. state':region.value==='mx'?'Mexican state':'European country'} before ordering. Documents are not yet approved for sale.`),price=e('span','product-price',`Draft price · $${p.price} USD`),button=e('button','','Explore checkout options ↗');button.type='button';button.addEventListener('click',()=>openProduct(p));tile.append(tag,head,body,price,button);grid.append(tile)}
-if(!list.length)grid.append(e('p','','No contracts match this selection.'))}
-function openProduct(p){chosen=p;document.getElementById('checkout-product-name').textContent=p.title;document.getElementById('checkout-price').textContent=`Proposed: $${p.price} USD`;
-form.reset();paymentCountry.value=region.value==='mx'?'mx':'us';form.elements.jurisdiction.placeholder=region.value==='us'?'e.g., Texas':region.value==='mx'?'e.g., Nuevo León':'e.g., France';msg.textContent='';document.getElementById('delivery-example').hidden=true;document.getElementById('checkout-demo-result').hidden=true;updateUI();dialog.showModal()}
-function updateUI(){const path=form.elements.path.value,country=paymentCountry.value;let gateway=selectedGateway();
-for(const label of gatewayChoices.querySelectorAll('[data-method]')){const id=label.dataset.method;const supported=methods[id]?.countries.includes(country);label.hidden=!supported;label.querySelector('input').disabled=!supported}
-if(!methods[gateway]?.countries.includes(country)){const next=country==='mx'?'openpay_card':'stripe';form.querySelector(`input[value="${next}"]`).checked=true;gateway=next}
-const self=path==='template';document.getElementById('payment-step').hidden=!self;
-identity.hidden=!(self&&gateway.startsWith('openpay_'));
-for(const input of identity.querySelectorAll('input'))input.required=self&&gateway.startsWith('openpay_');
-primary.textContent=self?(sandboxReady?`Continue with ${methods[gateway].name} ↗`:'Preview checkout options ↗'):(path==='customize'?'Request a customization quote ↗':'Request professional review ↗');
-demo.hidden=!self;sampleNote.textContent=self?`Sandbox sample only: ${methods[gateway].amount}. The proposed $${chosen?.price||'—'} contract price is NOT charged. No contract is delivered until an approved product is published.`:'Professional services are quoted and accepted after reviewing the inquiry; there is no immediate payment.';
+const t=k=>words[lang][k]||k;
+function translate(){document.documentElement.lang=lang;dialog.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n)}); if(chosen)updateCheckout();}
+language.addEventListener('change',()=>{lang=language.value;translate()});
+const el=(tag,cls,txt)=>{const a=document.createElement(tag);if(cls)a.className=cls;if(txt!==undefined)a.textContent=txt;return a};
+function redraw(){grid.replaceChildren();const list=contracts.filter(p=>p.regions.includes(region.value)&&(category.value==='all'||p.category===category.value));for(const p of list){const tile=el('article','product-tile'),tag=el('span','tag',p.category.replace('-',' ').toUpperCase()),title=el('h3','',p.title),body=el('p','',`Choose the relevant ${region.value==='us'?'U.S. state':region.value==='mx'?'Mexican state':'European country'}. Approved templates are not yet for sale.`),price=el('span','product-price',`Draft price · $${p.price} USD`),button=el('button','',t('explore'));button.type='button';button.addEventListener('click',()=>open(p));tile.append(tag,title,body,price,button);grid.append(tile)}if(!list.length)grid.append(el('p','','No contracts match this selection.'))}
+function open(p){chosen=p;form.reset();language.value=lang;$('checkout-demo-result').hidden=true;$('checkout-demo-result').replaceChildren();msg.textContent='';$('checkout-product-name').textContent=p.title;translate();dialog.showModal();getStatus();}
+function paymentMethod(){return form.querySelector('input[name="gateway"]:checked')?.value||'stripe'}
+function updateCheckout(){if(!chosen)return;const path=form.elements.path.value,gateway=paymentMethod();$('checkout-price').textContent=`${t('orderPreview')}: $${chosen.price} USD`;
+$('payment-step').hidden=path!=='template';primary.textContent=path==='template'?t('startTest'):path==='customize'?(lang==='es'?'Solicitar cotización →':'Request customization quote →'):(lang==='es'?'Solicitar revisión legal →':'Request legal review →');demo.hidden=path!=='template';
+$('gateway-sample-note').textContent=path==='template'?(ready[gateway]?t('providerReady'):t('notReady')):t('otherPath');
 }
-function inquiry(){const email=form.elements.email.value.trim(),jurisdiction=form.elements.jurisdiction.value.trim(),path=form.elements.path.value;
-const subject=encodeURIComponent(`Wardenclyffe · ${path==='customize'?'Customization':'Legal review'} · ${chosen.title}`);
-const body=encodeURIComponent(`Hello Wardenclyffe,\n\nI would like to request ${path} for: ${chosen.title}.\nJurisdiction: ${jurisdiction}\nContact: ${email}\n\nPlease confirm availability, fees, scope, and next steps.\n`);
-window.location.href=`mailto:info@wardenclyffefirm.com?subject=${subject}&body=${body}`;
-msg.textContent='Your email application should open with an inquiry draft. No payment has been collected.';
-}
-function sampleWalkthrough(){const gateway=selectedGateway(),label=methods[gateway],out=document.getElementById('checkout-demo-result');out.hidden=false;out.replaceChildren();
-out.append(e('strong','','Walkthrough — simulation only'));
-const ol=e('ol');const steps=['Customer selects the service and jurisdiction.',`Choose ${label.name} — ${label.amount} test price only.`,gateway.includes('bank')||gateway.includes('spei')?'Create a payment reference; await verified cleared funds.':'Redirect securely to the payment provider; customer completes test payment.','Payment server independently verifies the paid amount, currency, order and provider.','After verification, the sample file is attached to an email through Resend.','Order status becomes fulfilled and the customer receives a receipt.'];for(const step of steps)ol.append(e('li','',step));out.append(ol,e('p','','No real order was created, no provider was contacted, and no email was sent.'));
-document.getElementById('delivery-example').hidden=false;msg.textContent='Interactive demonstration completed. To run a real sandbox transaction, connect your private payment backend and test credentials.';}
-async function begin(event){event.preventDefault();if(busy||!chosen||!form.reportValidity())return;
-if(form.elements.path.value!=='template'){inquiry();return}
-const gateway=selectedGateway(),method=methods[gateway];if(!method){msg.textContent='Choose a payment method.';return}
-if(!sandboxReady){sampleWalkthrough();return}
-if(!window.confirm(`This creates a TEST transaction for ${method.amount}, delivering a NON-LEGAL sample only after verified payment. The selected contract will NOT be provided. Continue?`))return;
-const req={sku:'sandbox-demo',email:form.elements.email.value.trim()};
-if(gateway.startsWith('openpay_')){req.firstName=form.elements.firstName.value.trim();req.lastName=form.elements.lastName.value.trim();req.phone=form.elements.phone.value.trim()}
-if(gateway.startsWith('bank_'))req.bank=gateway.split('_')[1];
-busy=true;primary.disabled=true;msg.textContent=`Starting ${method.name} sandbox order…`;
-try{const response=await fetch(`${api}/api/checkout/${method.endpoint}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req)});const data=await response.json();if(!response.ok)throw Error(data.error||'Payment service unavailable');
-if(method.redirect){const u=new URL(data.checkoutUrl);const allowed=['checkout.stripe.com','www.paypal.com','www.sandbox.paypal.com','sandbox.paypal.com','sandbox-api.openpay.mx'];if(u.protocol!=='https:'||!allowed.includes(u.hostname))throw Error('Unexpected checkout address');location.assign(u.href);return}
-const box=document.getElementById('checkout-demo-result');box.hidden=false;box.replaceChildren(e('strong','',gateway==='openpay_spei'?'SPEI sandbox reference created':'Bank transfer order created'));
-box.append(e('p','',`Order ${data.orderId||'pending'} · ${data.currency||''} ${data.amount||''}`));
-if(gateway==='openpay_spei'){const d=data.transfer||{};if(d.clabe)box.append(e('p','',`Test CLABE: ${d.clabe}`));if(d.reference)box.append(e('p','',`Test reference: ${d.reference}`));box.append(e('p','','This is a TEST reference issued by Openpay, not Wardenclyffe’s actual BBVA account.'))}
-else{box.append(e('p','',`Reference: ${data.reference||'pending'}`));box.append(e('p','','Request verified bank instructions from Wardenclyffe. A receipt or screenshot does not confirm payment.'))}
-box.append(e('p','','Order pending: no email is sent until payment is independently verified.'));msg.textContent='Order created in sandbox; payment has not been confirmed.';
-}catch(error){msg.textContent=String(error.message||'Gateway unavailable. No charge can be confirmed here.');}finally{busy=false;primary.disabled=false}}
-form.addEventListener('submit',begin);demo.addEventListener('click',sampleWalkthrough);
-form.elements.path.addEventListener('change',updateUI);paymentCountry.addEventListener('change',updateUI);
-gatewayChoices.addEventListener('change',updateUI);region.addEventListener('change',drawProducts);category.addEventListener('change',drawProducts);drawProducts();
+async function getStatus(){try{const r=await fetch('/.netlify/functions/checkout-status',{headers:{accept:'application/json'},cache:'no-store'});const j=await r.json();ready={stripe:r.ok&&j?.stripe===true,paypal:r.ok&&j?.paypal===true};}catch{ready={stripe:false,paypal:false}}updateCheckout()}
+function inquiry(){const path=form.elements.path.value,email=form.elements.email.value.trim(),jurisdiction=form.elements.jurisdiction.value.trim();const subject=encodeURIComponent(`Wardenclyffe — ${path==='customize'?'Customization':'Legal review'} — ${chosen.title}`);const body=encodeURIComponent(`Hello Wardenclyffe,\n\nI would like ${path} for: ${chosen.title}\nJurisdiction: ${jurisdiction}\nContact: ${email}\n\nPlease confirm scope, fees and next steps.`);location.href=`mailto:info@wardenclyffefirm.com?subject=${subject}&body=${body}`;msg.textContent=t('otherPath')}
+function walk(){const box=$('checkout-demo-result');box.hidden=false;box.replaceChildren(el('strong','',lang==='es'?'Recorrido de pago de prueba':'Sandbox payment walkthrough'));const ol=el('ol');const steps=lang==='es'?['Elegir un documento y jurisdicción.','Elegir Stripe o PayPal y realizar un pago simulado de $1 USD.','El proveedor confirma el resultado del pago.','Wardenclyffe verifica el pago desde el servidor, no desde el navegador.','La entrega por correo se habilitará después de aprobar los contratos.']:['Select a document and jurisdiction.','Choose Stripe or PayPal and pay $1 USD using sandbox test funds.','The provider confirms whether payment succeeded.','Wardenclyffe verifies paid status server-side, not from the browser.','Email delivery follows after document approval and full fulfillment testing.'];for(const step of steps)ol.append(el('li','',step));box.append(ol);msg.textContent=ready[paymentMethod()]?t('providerReady'):t('notReady');}
+async function submit(event){event.preventDefault();if(busy||!chosen||!form.reportValidity())return;if(form.elements.path.value!=='template'){inquiry();return}
+const gateway=paymentMethod();if(!ready[gateway]){msg.textContent=t('notReady');return}if(!confirm(t('trial')))return;
+busy=true;primary.disabled=true;msg.textContent=t('redirecting');try{const r=await fetch(`/.netlify/functions/${gateway}-checkout`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({sku:'sandbox-demo',email:form.elements.email.value.trim()})});const d=await r.json();if(!r.ok||!d.checkoutUrl)throw Error(d.error||t('error'));const u=new URL(d.checkoutUrl);if(u.protocol!=='https:'||!['checkout.stripe.com','www.paypal.com','www.sandbox.paypal.com','sandbox.paypal.com'].includes(u.hostname))throw Error('Unexpected payment page.');location.assign(u.href);}catch(e){msg.textContent=e.message||t('error');busy=false;primary.disabled=false;}}
+form.addEventListener('submit',submit);form.elements.path.addEventListener('change',updateCheckout);form.querySelector('#gateway-choices').addEventListener('change',updateCheckout);demo.addEventListener('click',walk);region.addEventListener('change',redraw);category.addEventListener('change',redraw);redraw();translate();
 })();

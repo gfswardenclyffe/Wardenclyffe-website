@@ -1,5 +1,10 @@
-(()=>{'use strict';const p=new URLSearchParams(location.search),status=document.getElementById('checkout-return-status'),provider=p.get('provider'),config=window.WARDEN_COMMERCE||{};
-if(provider==='stripe'){status.textContent='Stripe checkout returned. Email delivery only happens after our server receives and verifies a paid Stripe webhook. If you completed a sandbox payment, look for the sample delivery email.';return}
-if(provider==='openpay'){status.textContent='Returned from Openpay México. An email sample can be delivered only after a verified charge.succeeded notification and an independent charge status check. This page does not confirm payment.';return}
-if(provider==='paypal'){const id=p.get('token');if(!id||!config.apiBase||config.mode!=='sandbox'){status.textContent='PayPal returned. Sandbox capture is not configured in this preview; no delivery is claimed.';return}status.textContent='Confirming your PayPal sandbox payment with the server…';fetch(String(config.apiBase).replace(/\/$/,'')+'/api/checkout/paypal/capture',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({orderId:id})}).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||'Unable to verify order');status.textContent='PayPal sandbox capture verified. If email delivery is configured, the sandbox sample is being sent to your purchase email.'}).catch(()=>status.textContent='Payment verification is not confirmed. Contact Wardenclyffe with your test order reference; do not assume delivery.')}
-})();
+(()=>{'use strict';const query=new URLSearchParams(location.search),node=document.getElementById('checkout-return-status');if(!node)return;
+const provider=query.get('provider'),session=query.get('session_id'),token=query.get('token');
+async function start(){if(provider!=='stripe'&&provider!=='paypal'){node.textContent='No verified transaction was supplied. No payment is confirmed.';return}
+node.textContent='Contacting the payment provider to verify your sandbox transaction…';
+try{let response;if(provider==='stripe'){if(!session)throw Error('Missing session reference');response=await fetch('/.netlify/functions/stripe-status?session_id='+encodeURIComponent(session),{cache:'no-store'})}
+else{if(!token)throw Error('Missing PayPal order reference');response=await fetch('/.netlify/functions/paypal-capture',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({orderId:token})})}
+const data=await response.json();if(!response.ok)throw Error(data.error||'Payment could not be verified');
+node.textContent=data.paid?'TEST PAYMENT VERIFIED ✓ — $1 USD sandbox transaction. No real charge or legal contract delivery took place.':`PAYMENT NOT VERIFIED — ${data.status||'pending'}. No document has been delivered.`;
+}catch(err){node.textContent='Payment verification unavailable. Check your provider sandbox dashboard before treating the order as paid. '+(err.message||'')}}
+start()})();
