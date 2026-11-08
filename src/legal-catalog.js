@@ -155,7 +155,7 @@ function translateUi(){
  }
  search.placeholder=v.searchPlaceholder;
  for(const option of topic.options)option.textContent=v[option.value]||option.value;
- for(const option of country.options)option.textContent=v[option.value]||option.value;
+ for(const option of country.options)option.textContent=v[option.value==='mx'?'mexico':'usa']||option.value;
 }
 function render(){
  const i=language.indexOf(current),v=ui[current],term=search.value.trim().toLocaleLowerCase(),selected=country.value;
