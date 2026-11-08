@@ -1,0 +1,49 @@
+/* Wardenclyffe | Policy chapter — original editorial layout, quiet movement */
+:root{--policy-ink:#153b4e;--policy-accent:#167985;--policy-gold:#e8bf76;--policy-quiet:#57717c}
+html{scroll-padding-top:22px}
+body.policy-page{background:#f4fafb;color:var(--policy-ink);overflow-x:hidden}
+.policy-page .site-head{position:relative;z-index:8;background:#f4fafb}
+.policy-hero{padding:clamp(28px,4.4vw,70px) clamp(20px,6vw,106px) clamp(28px,4.5vw,68px);display:grid;grid-template-columns:minmax(0,1.07fr) minmax(310px,1fr);gap:5vw;align-items:center;max-width:1740px;margin:auto}
+.policy-hero-text{position:relative;z-index:1}
+.policy-eyebrow{font:700 11px/1.7 ui-monospace,monospace;letter-spacing:.16em;color:#13808b}
+.policy-hero h1{font:normal clamp(48px,6.2vw,105px)/1.04 Georgia,'Times New Roman',serif;letter-spacing:-.027em;margin:21px 0 29px;max-width:820px}
+.policy-hero-text>p{font:normal clamp(17px,1.45vw,23px)/1.55 Georgia,serif;color:#496b7b;max-width:650px;margin:0 0 45px}
+.policy-date{font:700 11px/1.6 ui-monospace,monospace;letter-spacing:.11em;color:#708c93}
+.murmuration{height:clamp(275px,31vw,495px);position:relative;overflow:hidden;isolation:isolate;border-radius:160px 42px 150px 44px;background:radial-gradient(ellipse at 20% 22%,rgba(255,232,176,.86),transparent 42%),radial-gradient(ellipse at 83% 22%,rgba(187,236,221,.95),transparent 50%),linear-gradient(140deg,#c9f3ed 0%,#80bec3 39%,#398c97 70%,#116170 100%);box-shadow:inset 0 0 0 1px rgba(22,108,120,.13),0 22px 75px rgba(29,102,108,.14)}
+.murmuration:before{content:'';position:absolute;inset:auto -10% -40% -10%;height:70%;border-radius:50%;background:linear-gradient(20deg,rgba(14,93,92,.52),rgba(59,171,159,.12));filter:blur(27px);transform:rotate(-7deg)}
+.murmuration:after{content:'';position:absolute;inset:12% 10% auto auto;width:48%;height:48%;border-radius:50%;background:radial-gradient(circle,rgba(255,247,204,.64),transparent 64%);filter:blur(14px)}
+.starling-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:2;pointer-events:auto}
+.murmuration-caption{display:flex;justify-content:space-between;position:absolute;bottom:21px;left:31px;right:31px;z-index:3;color:rgba(249,254,249,.94);font:700 10px ui-monospace,monospace;letter-spacing:.14em;text-shadow:0 1px 8px #124f58}
+.policy-status{max-width:1500px;margin:0 auto;padding:22px 30px;display:flex;gap:15px;align-items:flex-start;background:#e9f5f3;border-top:1px solid #c5e4e1;border-bottom:1px solid #c5e4e1;color:#496873;font:13px/1.6 Arial,sans-serif}
+.policy-status strong{color:#205865}.policy-status-dot{width:10px;height:10px;border-radius:99px;background:#dca55f;margin-top:5px;flex-shrink:0}
+.policy-layout{max-width:1500px;margin:80px auto 0;padding:0 clamp(20px,5vw,74px);display:grid;grid-template-columns:minmax(210px,260px) minmax(0,790px);gap:clamp(48px,7vw,120px);align-items:start}
+.policy-toc{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow-y:auto;scrollbar-width:thin;padding-top:10px;display:flex;flex-direction:column;gap:11px}
+.policy-side-heading{color:#13818c;font:700 11px ui-monospace,monospace;letter-spacing:.18em;margin-bottom:11px}
+.policy-toc>a{color:#5b7c86;text-decoration:none;font:12px/1.55 Arial,sans-serif;padding:0 0 4px 0;transition:color .2s}
+.policy-toc>a:hover,.policy-toc>a:focus-visible{color:#0f727c;text-decoration:underline}
+.policy-related{margin-top:30px;padding-top:25px;border-top:1px solid #bad8d9;display:flex;flex-direction:column;gap:10px}
+.policy-related>span{font:700 10px ui-monospace,monospace;letter-spacing:.12em;color:#859ca1}
+.policy-related>a{color:#0e727b;font:600 12px Arial,sans-serif}
+.policy-article{background:#fff;max-width:100%;border:1px solid #d5e6e8;border-radius:20px;padding:clamp(25px,4.5vw,78px);box-shadow:0 18px 80px rgba(37,80,87,.04);overflow-wrap:break-word}
+.policy-article-intro{border-bottom:1px solid #dce7e8;margin-bottom:45px;padding-bottom:20px}
+.policy-article-intro>span,.policy-end>span{font:700 10px ui-monospace,monospace;letter-spacing:.16em;color:#19818a}
+.policy-article-intro p{font:13px Georgia,serif;color:#718992;margin:10px 0 0}
+.policy-article h2{font:normal clamp(29px,3.2vw,43px)/1.18 Georgia,serif;letter-spacing:-.015em;color:#18394a;margin:58px 0 22px;scroll-margin-top:28px}
+.policy-article h3{font:italic 25px/1.22 Georgia,serif;margin:28px 0 14px;color:#175b66}
+.policy-article p{font:15px/1.9 Arial,Helvetica,sans-serif;color:#435f6c;margin:0 0 20px;letter-spacing:0}
+.policy-article strong{font-weight:700}.policy-article .policy-bullet{position:relative;padding-left:25px;margin-bottom:9px}
+.policy-article .policy-bullet:before{content:'✦';position:absolute;left:1px;color:#c8a167;font-size:12px;top:1px}
+.policy-article .policy-numbered{padding-left:18px;text-indent:-18px;margin-bottom:10px}
+.policy-table-scroll{overflow-x:auto;margin:22px 0 42px;border:1px solid #d6e8e6;border-radius:10px}
+.policy-article table{width:100%;border-collapse:collapse;font:13px/1.65 Arial,Helvetica,sans-serif;min-width:420px}
+.policy-article th{background:#e4f4f1;color:#225b64;text-align:left;font-weight:700;padding:14px 19px;border-bottom:1px solid #c6e1df}
+.policy-article td{border-bottom:1px solid #e3edef;color:#466570;padding:13px 19px;vertical-align:top}
+.policy-article tr:last-child td{border-bottom:none}
+.policy-open-settings{border:1px solid #9bbfbf;background:#e6f4f1;border-radius:26px;padding:14px 21px;font:700 12px ui-monospace,monospace;letter-spacing:.04em;color:#145d69;cursor:pointer;margin:20px 0}
+.policy-open-settings:hover{background:#d6eeea}
+.policy-end{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-top:65px;border-top:1px solid #d3e4e4;padding-top:20px}
+.policy-end a{color:#0c7580;font:600 12px Arial,sans-serif}
+.policy-page .warden-footer{margin-top:110px}
+@media(max-width:1050px){.policy-hero{grid-template-columns:1fr 1fr;gap:18px}.policy-layout{grid-template-columns:195px minmax(0,1fr);gap:32px}.policy-article{padding:36px}.policy-hero h1{font-size:clamp(44px,5.5vw,65px)}}
+@media(max-width:760px){.policy-hero{display:flex;flex-direction:column;align-items:stretch;gap:30px}.policy-hero h1{font-size:clamp(46px,10vw,70px);margin:18px 0}.policy-hero-text>p{margin-bottom:22px}.murmuration{height:260px;border-radius:85px 25px 85px 25px}.policy-layout{display:flex;flex-direction:column;gap:30px;margin-top:35px}.policy-toc{position:static;width:100%;max-height:195px;overflow-y:auto;border-bottom:1px solid #b5d9dc;padding-bottom:16px}.policy-article{width:100%;padding:clamp(20px,5vw,36px)}.policy-article h2{margin:38px 0 16px}.policy-status{padding:17px 20px}.policy-page .warden-footer{margin-top:60px}}
+@media(prefers-reduced-motion:reduce){.policy-toc>a{transition:none}}

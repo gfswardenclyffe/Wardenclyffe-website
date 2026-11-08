@@ -23,3 +23,9 @@ Serve the repository over HTTP locally, or use GitHub Pages (Settings → Pages 
 ## Privacy
 
 Do not upload client material or approved legal templates to public GitHub. The pages do not send user data to a server; the Contact inquiry composer creates a mailto draft. Actual payment processing will require the verified server, reviewed policies and domain/email configuration.
+
+## Legal & privacy pages (V4.6 draft)
+
+`pages/terms.html`, `pages/privacy.html`, and `pages/cookies.html` reproduce the supplied November 8, 2026 policy document. All three pages are marked `noindex,nofollow` and visibly `Draft for legal and technical review` until checked against deployed services and jurisdictional requirements. The cookie notice and preference manager are working on every page; `src/cookie-consent.js` records a local first-party preference only. **No optional analytics or marketing trackers are included or activated by the current site.** If added later, those scripts must be loaded only after applicable affirmative consent, and the cookie disclosures must be updated. The site has a dynamic decorative starling flock with a reduced-motion fallback.
+
+To switch the legal page URLs to public final policies, remove the draft note and noindex only after review and approval; confirm that payment services, email delivery, analytics, advertising, and third-party embeds match disclosures. The live main-domain policy URLs still exist separately; this project has not overwritten them.
