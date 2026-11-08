@@ -28,7 +28,31 @@ function show(o){selected=o;$('reference').textContent='…'+o.reference.slice(-
  if(!o.history.length)add($('history'),'p','No review updates recorded yet.');
  for(const h of [...o.history].reverse())add($('history'),'p',date(h.at)+' · '+h.from+' → '+h.to+(h.note?' · '+h.note:''));
  $('detail').showModal()}
-$('login-form').addEventListener('submit',async e=>{e.preventDefault();token=$('token').value.trim();$('token').value='';$('login').hidden=true;$('desk').hidden=false;await refresh();if($('message').textContent){lock()}});
+$('login-form').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const attempted=$('token').value.trim();
+ if(!/^[a-fA-F0-9]{64}$/.test(attempted)){
+   msg('Enter the 64-character hexadecimal access token created for OMS_ADMIN_TOKEN.');
+   return;
+ }
+ token=attempted;
+ msg('Verifying secure access…');
+ try{
+   const response=await request();
+   orders=response.orders||[];
+   $('token').value='';
+   $('login').hidden=true;
+   $('desk').hidden=false;
+   render();
+   msg('');
+ }catch(error){
+   token='';
+   const message=error.message||'Unable to authenticate';
+   msg(message.includes('not configured')
+     ? 'Order Desk access is not configured on Netlify. Save OMS_ADMIN_TOKEN for Production with Functions access, redeploy, then sign in again.'
+     : message);
+ }
+});
 $('refresh').addEventListener('click',refresh);$('logout').addEventListener('click',lock);
 $('search').addEventListener('input',render);$('filter').addEventListener('change',render);
 $('update-form').addEventListener('submit',async e=>{e.preventDefault();$('save').disabled=true;try{
