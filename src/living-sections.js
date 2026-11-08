@@ -5,7 +5,7 @@ const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;
 const stage=document.querySelector('.living-stage');const word=document.body.dataset.world||'services';
 const cards=[...document.querySelectorAll('[data-form]')];const label=document.getElementById('active-label');const detail=document.getElementById('active-detail');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');const PALETTE=['#ffc66e','#ffdd91','#7bfae4','#8decf0','#e9fff5','#fca2b9','#b4ffd3'];
-const modes={services:['lattice','law','globe','shield','circuit'],work:['threads','clusters','network','blueprint','orbit','spectrum','bridge'],shop:['documents','documents','seal','globe','spectrum','circuit','shield'],contact:['connection','connection','network','bloom','orbit']};
+const modes={services:['lattice','law','globe','shield','circuit'],work:['threads','clusters','network','blueprint','orbit','spectrum','bridge'],shop:['documents','documents','law','seal','globe','spectrum','circuit','shield'],contact:['connection','connection','network','bloom','orbit']};
 const seq=modes[word]||modes.services;let active=0,particles=[],targets=[],width=0,height=0,dpr=1,frame=0,t0=performance.now(),lastActivity=0,raf=0;
 let mouse={x:-1000,y:-1000,power:0},shock={x:0,y:0,power:0};
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));

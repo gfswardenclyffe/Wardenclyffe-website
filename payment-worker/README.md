@@ -1,43 +1,46 @@
-# Wardenclyffe Payment Sandbox (not production)
+# Wardenclyffe — Payment Integration Lab (sandbox only)
 
-**This is intentionally test-only.** It cannot charge live cards: the Worker refuses any mode other than `sandbox` and requires Stripe keys beginning with `sk_test_`. The only server-side SKU is `sandbox-demo`, a $1.00 *test transaction* that delivers a plain text **non-legal sample** after verification. No actual contract templates are published or charged for.
+The payment methods below are implemented as server-side **sandbox routes**, not merely front-end buttons. This repo never contains actual payment credentials or legal document templates. **No live transactions are enabled.**
 
-## Architecture
+### Supported sandbox flows
 
-- GitHub Pages hosts the public, static UI only.
-- Cloudflare Worker handles sandbox checkout endpoints. Do **not** put API secrets in GitHub Pages HTML/JS.
-- Cloudflare D1 records each order and enforces one-way fulfillment status.
-- Stripe-hosted Checkout provides cards and eligible wallets (including Apple Pay / Google Pay where supported); the Worker validates the signed `checkout.session.completed` webhook and verifies `payment_status=paid` and the order amount.
-- PayPal Sandbox creates and captures an order server-side; the Worker verifies its capture details before fulfillment.
-- Resend sends a single email with the **sandbox sample** attached. The email uses an idempotency key to reduce duplicate fulfillment.
-- Later, **approved jurisdiction-specific documents** can be held in a private Cloudflare R2 bucket and delivered as email attachments after purchase. That product registry is deliberately absent until documents are reviewed and published.
+| Method | API route | Status and fulfillment | Test amount |
+|---|---|---|---|
+| Stripe cards / eligible Apple Pay and Google Pay | `/api/checkout/stripe` | Signed Stripe webhook, verifies paid order and USD amount | USD 1.00 |
+| PayPal | `/api/checkout/paypal` | Server captures, then verifies completed payment and USD amount | USD 1.00 |
+| Openpay México hosted card | `/api/checkout/openpay/card` | Redirect to Openpay; Basic-authenticated webhook AND independent charge retrieval | MXN 10.00 |
+| Openpay México SPEI | `/api/checkout/openpay/spei` | Openpay issues a test CLABE/reference, waits for verified completed charge | MXN 10.00 |
+| Chase direct transfer | `/api/checkout/bank` (`bank: chase`) | Creates pending USD order; authorized staff manually matches cleared transfer in bank ledger | USD 1.00 |
+| BBVA direct transfer | `/api/checkout/bank` (`bank: bbva`) | Creates pending MXN order; authorized staff manually matches cleared transfer in bank ledger | MXN 10.00 |
 
-## Setup (nothing enabled automatically)
+The only purchasable sandbox SKU is `sandbox-demo` for a **plain-text, nonlegal sample attachment**. The actual contract shown in Shop is never charged or sent. The `test mode` price and currency must be displayed clearly.
 
-1. Create a Cloudflare account and a D1 database: `wrangler d1 create wardenclyffe-orders-sandbox`.
-2. Copy `wrangler.example.toml` to `wrangler.toml` and replace `database_id`. The example intentionally excludes credentials and real IDs. Make sure `FRONTEND_BASE_URL` is your real GitHub Pages URL, and `ALLOWED_ORIGIN` is its browser origin (e.g. `https://gfswardenclyffe.github.io`).
-3. `npm install`, then `npm run db:init` after authenticating with Cloudflare.
-4. Configure the secrets with `wrangler secret put` for `STRIPE_SECRET_KEY` (**sk_test_... only**), `STRIPE_WEBHOOK_SECRET`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `RESEND_API_KEY`, `RESEND_FROM` (a verified sender domain). Never commit actual secrets.
-5. Deploy the Worker using `npm run deploy` and configure Stripe's sandbox webhook destination to `https://YOUR-WORKER.workers.dev/api/webhooks/stripe`. Subscribe to `checkout.session.completed` and `checkout.session.async_payment_succeeded`.
-6. In `src/commerce-config.js`, set `apiBase` to the Worker HTTPS URL and `mode` to `sandbox`. Keep `paymentsEnabled:false` for live products. The UI's payment buttons then redirect to **$1.00 test-only demo checkout**, not the selected contract.
-7. Test a Stripe sandbox card and PayPal sandbox account. Confirm D1 status and a single Resend sample attachment. Test failure/retry and duplicate-event behavior.
+### Set up in your private Cloudflare account
 
-## Before selling real documents
+1. Install Node 20+ and `npm install` from this `payment-worker` directory. Authenticate: `npx wrangler login`.
+2. Create D1: `npx wrangler d1 create wardenclyffe-orders-sandbox`. Copy `wrangler.example.toml` to an untracked `wrangler.toml` and insert its D1 ID.
+3. Create tables: `npm run db:init`. This creates `orders`, `bank_reconciliations` and `webhook_verifications`.
+4. Add secrets individually with `npx wrangler secret put NAME` (never share secrets in ChatGPT, GitHub, or screenshots). Required base secrets are `RESEND_API_KEY`, `RESEND_FROM`. Stripe: `STRIPE_SECRET_KEY` beginning `sk_test_` and `STRIPE_WEBHOOK_SECRET`. PayPal: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` from **Sandbox**. Openpay: `OPENPAY_MERCHANT_ID`, `OPENPAY_PRIVATE_KEY` (sandbox `sk_...`), `OPENPAY_WEBHOOK_USER`, `OPENPAY_WEBHOOK_PASSWORD`. Direct bank transfer reconciliation: `BANK_RECONCILIATION_TOKEN` (random, secret). Never store actual Chase/BBVA account or CLABE numbers in public source.
+5. In `wrangler.toml` use `PAYMENTS_MODE = "sandbox"`, `ALLOWED_ORIGIN = "https://wardenclyffe-preview.netlify.app"`, and `FRONTEND_BASE_URL = "https://wardenclyffe-preview.netlify.app"`.
+6. Deploy: `npm run deploy`. Save the Worker HTTPS URL. Check `/health`, which always reports `livePayments:false`.
+7. In Stripe's test/sandbox account, register `https://WORKER.workers.dev/api/webhooks/stripe` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`. Record `whsec_...` privately in Worker secrets.
+8. In Openpay México's *sandbox* dashboard, register `https://WORKER.workers.dev/api/webhooks/openpay` with HTTP Basic authentication using the chosen webhook user and password. Enable `charge.succeeded` and `verification`. Openpay sends a verification code: retrieve via the private D1 table `webhook_verifications`, then enter it in the Openpay dashboard. Do not expose that code in your website. Openpay sandbox API host: `sandbox-api.openpay.mx`.
+9. Verify the `wardenclyffefirm.com` domain (or another sender domain you control) with Resend. Set `RESEND_FROM` to an authorized sender. Email is triggered **only after server-side payment verification**; the attached file is the nonlegal sandbox sample.
+10. Update the public `src/commerce-config.js` with `apiBase:'https://WORKER.workers.dev', mode:'sandbox'`; **do not set live payments true**. GitHub → Netlify will deploy the UI. End-to-end test one provider at a time with real provider *test* accounts.
 
-- Review and approve actual legal templates for each jurisdiction and service scope. Upload only authorized documents to private storage; never commit client documents or private templates to GitHub.
-- Define refunds, delivery terms, taxes/VAT, merchant-of-record entity, currency, disputes, customer receipts, privacy retention, and professional-eligibility/conflicts checks.
-- Build a server-owned real SKU/price inventory that authorizes checkout only for products with a reviewed, deliverable document. Separate instant downloads from professional drafting/review engagements.
-- Implement stronger production access control and monitored webhook retries; extend from sandbox to live mode only after end-to-end audits.
-- Test mail delivery and provide a support route for undelivered files.
+For demo-only review of the user interface, leave the `apiBase` empty: the checkout **walkthrough** explicitly simulates the steps without creating orders or sending emails.
 
-## API endpoints
+### Manual Chase / BBVA transfers
 
-| Endpoint | Purpose |
-|---|---|
-| `GET /health` | Check sandbox service without secrets |
-| `POST /api/checkout/stripe` | Create test Stripe Checkout Session |
-| `POST /api/webhooks/stripe` | Verify Stripe signature, settled amount; send sample |
-| `POST /api/checkout/paypal` | Create PayPal sandbox order |
-| `POST /api/checkout/paypal/capture` | Verify PayPal capture; send sample |
+The bank order endpoint creates a pending reference, but cannot confirm a bank transfer by itself. Chase and BBVA are **not hosted card gateways**; actual receiving bank instructions must be supplied through a verified channel after order creation. An authorized operator must reconcile cleared funds **in the bank ledger**, matching bank, reference, amount and currency, then invoke `POST /api/admin/bank/confirm` with the private bearer `BANK_RECONCILIATION_TOKEN`. Required JSON: `orderId`, `ledgerVerified:true`, `bankTransactionId` (unique), `bank` (`chase` or `bbva`), `currency` (`usd` or `mxn`), `amountMinor` (100 or 1000 test cents), and `reviewer`. This is a *manual operator process*; the code does not connect to Chase or BBVA APIs. The database uniquely records the bank transaction ID to prevent reuse. A screenshot/receipt submitted by a customer never triggers fulfillment.
 
-The sample is **not a contract, legal advice, or a payable product**. The GitHub Pages site is safe to publish without the Worker: checkout remains an interactive nonpayment preview.
+### Security and production release gate
+
+- Merchant credentials are server-only. The site never gathers card numbers and never authorizes a sale from a customer-supplied price.
+- Enforce exact order ID, currency, amount, provider and completed status for third-party confirmations. Webhook retries and fulfillment are idempotent.
+- Only reviewed, jurisdiction-appropriate legal document SKUs can eventually be authorized. PDFs must be kept in private storage and distributed after verified settlement.
+- Production requires additional work: provisioned merchants, approval of individual legal products, validated tax and currency requirements, product-level refunds, chargeback handling, bank statement access controls, secure receipts, monitoring, webhook retry/runbook, privacy compliance, and real delivery tests. Do not switch this code to live mode without audit.
+
+### Code tests
+
+Run `npm test`. The tests include signature validation, Openpay hook authentication, checkout input safety, and manual reconciliation checks.
