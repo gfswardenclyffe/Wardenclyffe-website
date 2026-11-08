@@ -40,6 +40,7 @@ export default async req => {
     const result = await notifyVerifiedSandboxOrder({
       provider: 'stripe', orderId: session.id, customerEmail,
       sku: SAMPLE.sku, amount: SAMPLE.amount, currency: SAMPLE.currency, livemode: false,
+      locale: session.metadata?.locale === 'es' ? 'es' : 'en',
     });
     return respond({ received: true, paid: true, notifications: result.status, fulfillment: 'disabled_pending_document_approval', documentDelivery: 'disabled' });
   } catch (error) {

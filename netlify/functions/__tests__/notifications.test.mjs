@@ -31,8 +31,14 @@ test('verified sandbox payment sends customer plus office notices once',async()=
   const result=await notifyVerifiedSandboxOrder(order,{env,store,send});
   assert.equal(result.status,'notifications_sent');assert.equal(messages.length,2);
   assert.equal(messages[0].to,'customer@example.org');assert.equal(messages[1].to,'office@example.org');
-  assert.match(messages[1].html,/no delivery task is required/);
+  assert.match(messages[1].html,/no delivery task is required/i);
   assert.match(messages[0].html,/not a legal contract/i);
+  assert.match(messages[0].html,/Wardenclyffe/);
+  assert.match(messages[0].html,/PAYMENT CONFIRMATION/);
+  assert.match(messages[1].html,/OPEN ORDER REGISTER/);
+  assert.ok(messages[0].text.includes('No real money was charged'));
+  assert.ok(messages[1].text.includes('No delivery task is required'));
+  assert.notEqual(messages[0].subject,messages[1].subject);
   const replay=await notifyVerifiedSandboxOrder(order,{env,store,send});
   assert.equal(replay.status,'already_notified');assert.equal(messages.length,2);
 });
@@ -59,4 +65,13 @@ test('Stripe signature verifier accepts a correct signed event and rejects tampe
   assert.equal(signatureValid(raw,`t=${ts},v1=${sig}`,key,ts),true);
   assert.equal(signatureValid(raw+'x',`t=${ts},v1=${sig}`,key,ts),false);
   assert.equal(signatureValid(raw,`t=${ts},v1=${sig}`,key,ts+301),false);
+});
+
+test('customer confirmation can be delivered in Spanish for Spanish checkout',async()=>{
+  const messages=[];
+  await notifyVerifiedSandboxOrder({...order,orderId:'cs_test_spanish12345',locale:'es'},{env,store:memoryStore(),send:async message=>{messages.push(message);return 'sent'}});
+  assert.equal(messages.length,2);
+  assert.match(messages[0].subject,/Confirmaci/);
+  assert.match(messages[0].html,/Confirmación de pago/);
+  assert.match(messages[1].html,/OPERACIONES/);
 });

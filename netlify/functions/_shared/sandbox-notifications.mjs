@@ -4,6 +4,7 @@
  * Call exclusively after a provider-verified $1.00 sandbox payment.
  */
 import { SAMPLE, emailOK } from './common.mjs';
+import { renderCustomerEmail, renderOfficeEmail, customerSubject, officeSubject, customerPlain, officePlain } from './email-templates.mjs';
 
 const ORDER_STORE = 'wardenclyffe-sandbox-orders';
 const STORE_PREFIX = 'verified/';
@@ -31,7 +32,7 @@ function orderKey(provider, orderId) {
   return `${STORE_PREFIX}${provider}/${orderId}`;
 }
 
-async function resendSend({ to, subject, html, idempotencyKey }, env = process.env) {
+async function resendSend({ to, subject, html, text, idempotencyKey }, env = process.env) {
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -44,6 +45,7 @@ async function resendSend({ to, subject, html, idempotencyKey }, env = process.e
       to: [to],
       subject,
       html,
+      text,
       reply_to: 'info@wardenclyffefirm.com',
     }),
   });
@@ -88,31 +90,29 @@ export async function notifyVerifiedSandboxOrder(order, { env = process.env, sto
     paidAt: new Date().toISOString(),
     status: 'payment_verified',
     documentStatus: 'sandbox_no_document_due',
+    fulfillmentRequired: false,
+    locale: order.locale === 'es' ? 'es' : 'en',
   };
   if (!existing) await store.setJSON(key, record, { onlyIfNew: true });
 
-  const reference = htmlEscape(order.orderId);
   const customer = normalize(order.customerEmail);
-  const customerHTML = `<p>Your Wardenclyffe test payment has been verified.</p>
-    <p>Amount: <b>$1.00 USD (sandbox)</b>. Reference: <code>${reference}</code>.</p>
-    <p><b>No real money was charged. This is not a legal contract purchase.</b>
-    There is no document to deliver for this test transaction.</p>
-    <p>For questions, contact info@wardenclyffefirm.com.</p>`;
-  const officeHTML = `<p>A verified <b>$1.00 USD sandbox payment</b> has been recorded.</p>
-    <p>Reference: <code>${reference}</code><br>Customer email: ${htmlEscape(customer)}</p>
-    <p><b>Sandbox test only. No client document is owed and no delivery task is required.</b></p>
-    <p>For future approved products, paid orders will enter a separately managed fulfillment queue.</p>`;
+  const details = { orderId: order.orderId, customerEmail: customer, locale: order.locale === 'es' ? 'es' : 'en' };
+  const internalPage = (env.APP_BASE_URL || 'https://wardenclyffe-preview.netlify.app').replace(/\/$/, '') + '/pages/order-management.html';
+  const customerHTML = renderCustomerEmail(details);
+  const officeHTML = renderOfficeEmail(details, internalPage);
   // Deterministic keys deduplicate repeated webhook deliveries at the email provider.
   await send({
     to: customer,
-    subject: 'Wardenclyffe — test payment confirmed ($1 sandbox)',
+    subject: customerSubject(details.locale),
     html: customerHTML,
+    text: customerPlain(details),
     idempotencyKey: `warden-${order.provider}-${order.orderId}-customer`,
   }, env);
   await send({
     to: normalize(env.ORDER_ALERT_EMAIL),
-    subject: '[SANDBOX] Wardenclyffe payment recorded — no document due',
+    subject: officeSubject(details.locale),
     html: officeHTML,
+    text: officePlain(details),
     idempotencyKey: `warden-${order.provider}-${order.orderId}-office`,
   }, env);
   await store.setJSON(key, { ...record, status: 'notifications_sent', notifiedAt: new Date().toISOString() });
