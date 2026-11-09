@@ -10,14 +10,14 @@
 | Page | ES/FR/ZH interface | Important qualification |
 |---|---|---|
 | Home | Four-language selector, navigational labels and dynamic chapter captions | Check visual transitions and mobile typography |
-| Our History / About | Narrative, timeline, founders | Public names **Ángeles Franco** and **Gustavo Franco** only. Verify 2013 founding and documentary dates before removing qualification |
+| Our History / About | Narrative, timeline, founders | Use only the discreet Franco family reference; no individual founder names, specific timeline years or historical filing details |
 | Services | Four disciplines, service items and calls to action | Verify individual licensure and geographic scope |
 | Work | Featured categories and confidentiality notices | No named clients or confidential transactions without permission |
 | Shop | Product catalog, legal directory, Texas notary, guided sandbox checkout | Templates not sold; notarial commissions not asserted |
 | Contact | Calls to action, inquiry topics, form labels and privacy notices | Form invokes local email client only; no secure document intake |
-| Terms | Multilingual interface, headings and navigation | **Full substantive body is English working draft**, professional translated legal versions pending |
-| Privacy | Multilingual interface, headings and navigation | **Full substantive body is English working draft**, verify actual tracking/processing and translate/review |
-| Cookie Policy | Multilingual interface, headings and navigation | **Full substantive body is English working draft**; verify actual third-party technology |
+| Terms | Multilingual interface, headings and navigation | Draft substantive translations are present in ES/FR/ZH but require professional legal review before publication |
+| Privacy | Multilingual interface, headings and navigation | Draft substantive translations are present in ES/FR/ZH, verify actual tracking/processing and translate/review |
+| Cookie Policy | Multilingual interface, headings and navigation | Draft substantive translations are present in ES/FR/ZH; verify actual third-party technology |
 | Cookie consent | Multilingual controls and explanations | Confirm consent behavior by locale and screen size |
 | Sandbox payment return | Multilingual page copy and some verification statuses | No real financial transactions |
 | Order Desk | Translated visible labels and notes | Internal sandbox-only dashboard; dynamic server messages may remain English |
@@ -29,7 +29,7 @@ A shared `lang=en|es|fr|zh` query parameter preserves navigation on public pages
 1. **Deployment:** restore Netlify deployment availability and verify the newest SHA is marked Published. An uploaded/committed change is not live just because GitHub accepted it.
 2. **Languages:** manually test main pages and menus at desktop and mobile widths in all four languages, including auto-changing homepage chapters, contact form, cookie modal, shop filters and sandbox checkout. Have a native or qualified reviewer approve translations; Chinese is Simplified Chinese.
 3. **Legal policies:** complete professional translation and legal review of **every paragraph**, not just headings. Existing policies carry a `noindex,nofollow` directive and are explicitly marked draft; do not remove it until approved.
-4. **Corporate history:** verify founding year, incorporation and trademark milestones with records; keep only the two requested founder names.
+4. **Corporate history:** retain only symbolic timeline phases and the Franco family designation on public About pages. Do not publish individual founder names, specific dates, or filing references.
 5. **Notary/legal services:** check Texas Secretary of State commission and authority before any notary marketing as available. Confirm attorney licenses, conflicts checks, jurisdiction, and representation limitations before offering legal services.
 6. **Email:** verify SPF, DKIM, DMARC and Resend sender domain; test payment-confirmation and internal-alert delivery with real inboxes.
 7. **Commerce:** keep Stripe/PayPal sandbox keys; do not activate real payments or legal-document delivery until product texts, pricing, refunds, terms, taxes, secure storage, fulfillment queue, and webhook handling are approved.
@@ -39,3 +39,10 @@ A shared `lang=en|es|fr|zh` query parameter preserves navigation on public pages
 
 ## Launch gate
 **NOT PUBLICATION READY YET.** The code and locale infrastructure can be reviewed from GitHub while Netlify deploys are paused. Do not advertise a fully translated legal agreement or accept live client orders until the required manual/legal verification is finished.
+
+## Launch preparation update
+- The multilingual and discreet family-history corrections were merged to `main` as `1dc9ffa`.
+- Public About timeline now uses numbered symbolic phases without exact dates, filing history, or identifying individual founders.
+- Commerce configuration remains sandbox with `paymentsEnabled:false`.
+- Domain cutover to wardenclyffefirm.com has **not** been completed; validate successful Netlify deployment and working HTTPS before altering DNS.
+- Older GitHub commits may still retain historical page contents; assess repository visibility and history separately from current page output.
