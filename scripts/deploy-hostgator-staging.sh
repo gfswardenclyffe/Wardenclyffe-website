@@ -40,6 +40,13 @@ for directory in assets data pages src; do
   /bin/cp -R "$directory/." "$STAGING_ROOT/$directory/"
 done
 
+# The original warrior favicon is preserved on the live HostGator server.
+# Keep the password-protected staging assets in sync without copying WordPress.
+FAVICON_SOURCE="/home2/gfrancossh/public_html/assets/wardenclyffe-warrior-favicon.jpg"
+if [[ -f "$FAVICON_SOURCE" ]]; then
+  /bin/cp -f "$FAVICON_SOURCE" "$STAGING_ROOT/assets/wardenclyffe-warrior-favicon.jpg"
+fi
+
 # Exclude server-dependent and internal operational pages.
 for file in checkout-return.html order-management.html; do
   /bin/rm -f "$STAGING_ROOT/pages/$file"
