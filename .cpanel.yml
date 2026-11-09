@@ -1,0 +1,5 @@
+---
+# HostGator cPanel Git deployment; strictly staging-only.
+deployment:
+  tasks:
+    - /bin/bash scripts/deploy-hostgator-staging.sh
