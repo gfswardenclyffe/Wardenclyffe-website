@@ -384,7 +384,7 @@ function syncScene(){
  const scene=window.__warden.scene;
  if(scene===lastScene)return scene;
  lastScene=scene;
- const activeLaw=scene===1,activeDNA=scene===2,activeHeart=scene===4;
+ const activeLaw=scene===1,activeDNA=scene===2,activeHeart=scene===4&&!window.WARDEN_STAGING_DOT_OVERRIDES;
  if(activeHeart&&!heartModel)heartModel=createHeart(heartCanvas);
  lawCanvas.style.display=activeLaw?'block':'none';
  dnaCanvas.style.display=activeDNA?'block':'none';
