@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /wardenclyffe-staging/
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+Disallow: /xmlrpc.php
+
+Sitemap: https://wardenclyffefirm.com/sitemap.xml
