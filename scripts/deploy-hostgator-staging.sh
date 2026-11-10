@@ -22,8 +22,8 @@ if ! grep -Fq 'paymentsEnabled:false' src/commerce-config.js ||
 fi
 
 # Fail closed if source folders contain symlinks or server-side code.
-if find assets data pages src -type l -print -quit | grep -q . ||
-   find assets data pages src -type f \( -name '*.php' -o -name '*.phtml' -o -name '.htaccess' -o -name '.env' \) -print -quit | grep -q .; then
+if find assets data pages src es fr zh -type l -print -quit | grep -q . ||
+   find assets data pages src es fr zh -type f \( -name '*.php' -o -name '*.phtml' -o -name '.htaccess' -o -name '.env' \) -print -quit | grep -q .; then
   echo "ABORT: unexpected executable, configuration, or symlink file." >&2
   exit 1
 fi
@@ -34,7 +34,7 @@ for file in index.html 404.html; do
   test -f "$file"
   /bin/cp -f "$file" "$STAGING_ROOT/$file"
 done
-for directory in assets data pages src; do
+for directory in assets data pages src es fr zh; do
   test -d "$directory"
   /bin/mkdir -p "$STAGING_ROOT/$directory"
   /bin/cp -R "$directory/." "$STAGING_ROOT/$directory/"
@@ -53,7 +53,7 @@ for file in checkout-return.html order-management.html; do
 done
 
 # Preview pages must not be indexed. Production configuration comes later.
-for html in "$STAGING_ROOT/index.html" "$STAGING_ROOT/404.html" "$STAGING_ROOT"/pages/*.html; do
+for html in "$STAGING_ROOT/index.html" "$STAGING_ROOT/404.html" "$STAGING_ROOT"/pages/*.html "$STAGING_ROOT"/es/*.html "$STAGING_ROOT"/fr/*.html "$STAGING_ROOT"/zh/*.html; do
   if ! grep -qi 'name="robots"' "$html"; then
     /usr/bin/perl -0777 -i -pe 's/(<head\b[^>]*>)/$1<meta name="robots" content="noindex,nofollow,noarchive">/i' "$html"
   fi
