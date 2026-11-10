@@ -53,7 +53,8 @@ for file in checkout-return.html order-management.html; do
 done
 
 # STAGING-ONLY ART TEST: draw the exact dot sculptures from the two owner-
-# supplied demos during Law (chapter 02) and Business (chapter 03).
+# supplied demos during Law (chapter 02), Business (chapter 03), and
+# Living Heart (chapter 05 / Beyond).
 # The original homepage, chapters, captions, lake and all live files stay intact.
 # This script is inserted ONLY into protected copies after the HTML is copied.
 for homepage in "$STAGING_ROOT/index.html" "$STAGING_ROOT/es/index.html" "$STAGING_ROOT/fr/index.html" "$STAGING_ROOT/zh/index.html"; do
@@ -63,9 +64,9 @@ for homepage in "$STAGING_ROOT/index.html" "$STAGING_ROOT/es/index.html" "$STAGI
     exit 1
   fi
   if [[ "$homepage" == "$STAGING_ROOT/index.html" ]]; then
-    art_src="src/living-precision.js?v=20261110-arttest2"
+    art_src="src/living-precision.js?v=20261110-heart-preview1"
   else
-    art_src="../src/living-precision.js?v=20261110-arttest2"
+    art_src="../src/living-precision.js?v=20261110-heart-preview1"
   fi
   ART_SRC="$art_src" /usr/bin/perl -0777 -i -pe '
     BEGIN { $script = $ENV{"ART_SRC"}; }
