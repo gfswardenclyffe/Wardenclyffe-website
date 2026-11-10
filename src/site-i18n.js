@@ -4,6 +4,12 @@
 (()=>{'use strict';
 if(window.WardenclyffeI18n)return;
 const supported=new Set(['en','es','fr','zh']);
+// Localized static homepages use language-specific crawlable URLs.
+const stagingPrefix=location.pathname.startsWith('/wardenclyffe-staging/')?'/wardenclyffe-staging':'';
+const localPath=location.pathname.slice(stagingPrefix.length)||'/';
+const localeMatch=localPath.match(/^\/(es|fr|zh)(?:\/|$)/);
+const localeHome=!!localeMatch && /^\/(es|fr|zh)\/(?:index\.html)?$/.test(localPath);
+const englishHome=localPath==='/'||localPath==='/index.html';
 const catalog=window.WardenclyffeTranslations||{};
 const originals=new WeakMap(),attributes=new WeakMap();
 let active='en',busy=false;
@@ -110,7 +116,12 @@ function translate(){
  }finally{busy=false}
 }
 function select(lang,{setHistory=true}={}){
- active=supported.has(lang)?lang:'en';
+ const next=supported.has(lang)?lang:'en';
+ if(setHistory&&(localeHome||englishHome)){
+  const destination=stagingPrefix+'/' + (next==='en'?'':next+'/');
+  if(location.pathname!==destination){location.assign(destination);return;}
+ }
+ active=next;
  translate();
  if(setHistory){const url=new URL(location.href);if(active==='en')url.searchParams.delete('lang');else url.searchParams.set('lang',active);history.replaceState({},'',url);}
  window.dispatchEvent(new CustomEvent('wardenclyffe:language-changed',{detail:{lang:active}}));
@@ -119,7 +130,7 @@ function boot(){
  makeAboutLink();
  document.querySelector('title')?.setAttribute('data-english-title',document.title);
  const requested=new URLSearchParams(location.search).get('lang');
- select(requested||'en',{setHistory:false});
+ select(localeHome?localeMatch[1]:(requested||'en'),{setHistory:false});
  const observation=new MutationObserver(muts=>{
   if(busy)return;
   const dynamic=muts.some(m=>m.type==='childList'||m.type==='characterData');
