@@ -208,9 +208,9 @@ function frame(now){
 return {frame,resize};
 }
 
-const shell=document.querySelector('.shell');
+const stage=document.querySelector('.hero');
 const primary=document.getElementById('swarm');
-if(!shell||!primary||!window.__warden)return;
+if(!stage||!primary||!window.__warden)return;
 const makeLayer=(name)=>{
  const cv=document.createElement('canvas');
  cv.className='precision-sculpture precision-'+name;
@@ -219,7 +219,7 @@ const makeLayer=(name)=>{
   position:'absolute',inset:'0',width:'100%',height:'100%',zIndex:'3',
   display:'none',pointerEvents:'none',cursor:'crosshair',touchAction:'none'
  });
- shell.appendChild(cv);
+ stage.appendChild(cv);
  return cv;
 };
 const lawCanvas=makeLayer('law');
@@ -237,6 +237,7 @@ function syncScene(){
  lawCanvas.style.pointerEvents=activeLaw?'auto':'none';
  dnaCanvas.style.pointerEvents=activeDNA?'auto':'none';
  primary.style.pointerEvents=(activeLaw||activeDNA)?'none':'auto';
+ primary.style.opacity=(activeLaw||activeDNA)?'0':'1';
  if(activeLaw)lawModel.resize();
  if(activeDNA)dnaModel.resize();
  return scene;
