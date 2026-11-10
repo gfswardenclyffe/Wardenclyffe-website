@@ -130,14 +130,15 @@ function boot(){
  makeAboutLink();
  document.querySelector('title')?.setAttribute('data-english-title',document.title);
  const requested=new URLSearchParams(location.search).get('lang');
- select(localeHome?localeMatch[1]:(requested||'en'),{setHistory:false});
+ const declaredLang=document.documentElement.getAttribute('lang')||'en';
+ select(localeHome?localeMatch[1]:(requested||(supported.has(declaredLang)?declaredLang:'en')),{setHistory:false});
  const observation=new MutationObserver(muts=>{
   if(busy)return;
   const dynamic=muts.some(m=>m.type==='childList'||m.type==='characterData');
   if(dynamic)translate();
  });
  observation.observe(document.body,{subtree:true,childList:true,characterData:true});
- window.addEventListener('popstate',()=>select(new URLSearchParams(location.search).get('lang')||'en',{setHistory:false}));
+ window.addEventListener('popstate',()=>select(localeHome?localeMatch[1]:(new URLSearchParams(location.search).get('lang')||'en'),{setHistory:false}));
 }
 window.WardenclyffeI18n={get language(){return active},select,t:label};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
