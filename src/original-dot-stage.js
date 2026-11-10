@@ -1,16 +1,14 @@
-/* Only switches between the TWO EXACT user-supplied HTML demos.
- * No particle code from either supplied file is altered or reimplemented. */
+/* The supplied HTML files run unchanged inside an iframe.
+ * This only swaps the iframe URL when the user selects either original. */
 (()=>{'use strict';
- const host=document.querySelector('.original-dot-stage');
- if(!host)return;
- const frames=[...host.querySelectorAll('iframe[data-original-dots]')];
+ const frame=document.querySelector('#original-dot-frame');
  const buttons=[...document.querySelectorAll('button[data-dot-scene]')];
- if(frames.length!==2||buttons.length!==2)return;
- let active=0;
- function show(n){
-  active=n;
-  frames.forEach((frame,i)=>{frame.hidden=i!==active;frame.setAttribute('aria-hidden',String(i!==active));});
-  buttons.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===active)));
+ if(!frame||buttons.length!==2)return;
+ function show(i){
+  const path=buttons[i].dataset.dotScene;
+  if(frame.getAttribute('src')!==path)frame.setAttribute('src',path);
+  buttons.forEach((b,index)=>b.setAttribute('aria-pressed',String(index===i)));
+  frame.title=buttons[i].textContent.trim()+' animation';
  }
  buttons.forEach((b,i)=>b.addEventListener('click',()=>show(i)));
  show(0);
