@@ -54,8 +54,8 @@ done
 
 # STAGING-ONLY ART TEST: draw the exact dot sculptures from the two owner-
 # supplied demos during Law (chapter 02) and Business (chapter 03).
-# Original user-uploaded dot animations override Technology (chapter 04)
-# and the Living Heart (chapter 05 / Beyond) on staging ONLY.
+# Original user-uploaded dot animations override Origin (chapter 01),
+# Technology (chapter 04) and Living Heart (chapter 05 / Beyond) on staging ONLY.
 # The original homepage, chapters, captions, lake and all live files stay intact.
 # This script is inserted ONLY into protected copies after the HTML is copied.
 for homepage in "$STAGING_ROOT/index.html" "$STAGING_ROOT/es/index.html" "$STAGING_ROOT/fr/index.html" "$STAGING_ROOT/zh/index.html"; do
@@ -66,14 +66,14 @@ for homepage in "$STAGING_ROOT/index.html" "$STAGING_ROOT/es/index.html" "$STAGI
   fi
   if [[ "$homepage" == "$STAGING_ROOT/index.html" ]]; then
     art_src="src/living-precision.js?v=20261110-heart-preview1"
-    dots_src="src/staging-dot-overlays.js?v=20261110-original-dots1"
+    dots_src="src/staging-dot-overlays.js?v=20261110-original-dots2"
   else
     art_src="../src/living-precision.js?v=20261110-heart-preview1"
-    dots_src="../src/staging-dot-overlays.js?v=20261110-original-dots1"
+    dots_src="../src/staging-dot-overlays.js?v=20261110-original-dots2"
   fi
   ART_SRC="$art_src" DOTS_SRC="$dots_src" /usr/bin/perl -0777 -i -pe '
     BEGIN { $script = $ENV{"ART_SRC"}; $dots = $ENV{"DOTS_SRC"}; }
-    s#</body>#<script defer src="$script"></script><script defer src="$dots"></script></body>#i
+    s#</body>#<script defer src="$dots"></script><script defer src="$script"></script></body>#i
       or die "ABORT: staging homepage missing closing body tag";
   ' "$homepage"
   grep -Fq "$art_src" "$homepage" || { echo "ABORT: art test not installed: $homepage" >&2; exit 1; }
