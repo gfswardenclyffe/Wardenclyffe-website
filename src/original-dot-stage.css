@@ -1,8 +1,8 @@
 /* Presentation frame only: original animations run unmodified in their own HTML documents. */
-.original-dot-stage{position:relative;flex:1;min-height:440px;background:#f4f2ee;isolation:isolate}
+ .original-dot-stage{position:relative;z-index:2;flex:1;min-height:440px;background:#f4f2ee;isolation:isolate}
 .original-dot-stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#f4f2ee}
 .original-dot-stage iframe[hidden]{display:none}
-.original-dot-controls{display:flex;gap:12px;justify-content:center;align-items:center;background:#f4f2ee;padding:16px 24px 24px;border-top:1px solid rgba(35,65,86,.12)}
+.original-dot-controls{position:relative;z-index:5;display:flex;gap:12px;justify-content:center;align-items:center;background:#f4f2ee;padding:16px 24px 24px;border-top:1px solid rgba(35,65,86,.12)}
 .original-dot-controls button{border:1px solid rgba(28,61,87,.32);border-radius:999px;padding:9px 18px;background:#fff;color:#203e58;font-size:12px;font-weight:600;cursor:pointer;transition:background .2s,color .2s}
 .original-dot-controls button[aria-pressed="true"]{background:#203e58;color:#fff}
 .original-dot-controls button:focus-visible{outline:2px solid #2f6bff;outline-offset:3px}
