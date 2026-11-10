@@ -468,7 +468,13 @@ function animate(now){
   const scene=window.__warden.scene;
   if(scene!==lastFrameScene){lastFrameScene=scene;enter(scene);}
   const obj=models.get(scene);
-  if(options[scene]&&obj&&obj.canvas.style.display==='block')obj.model.frame(now);
+  // Coordinate with the precision engine. The old canvas must not cover or
+  // overwrite Origin/Technology/Beyond; it returns for the normal chapters.
+  if(options[scene]&&obj&&obj.canvas.style.display==='block'){
+    if(primary.style.opacity!=='0')primary.style.opacity='0';
+    if(primary.style.pointerEvents!=='none')primary.style.pointerEvents='none';
+    obj.model.frame(now);
+  }
   requestAnimationFrame(animate);
 }
 window.addEventListener('resize',()=>{
