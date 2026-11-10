@@ -49,6 +49,8 @@ let particles=[], shapeTargets=[], morphFrame=0;
 let reducedMotion=reduced.matches, animId=0;
 const mouse={x:-200,y:-200,vx:0,vy:0,active:false,down:false};
 let shock={x:-1000,y:-1000,power:0};
+const shockRings=[];
+const orbit={yaw:0,pitch:0,dragging:false,lastX:0,lastY:0};
 let seed=1234567;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}function rr(a,b){return a+rand()*(b-a)}
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const mix=(a,b,t)=>a+(b-a)*t;
@@ -319,8 +321,9 @@ function setScene(i){i=((i%5)+5)%5;if(i===sceneIndex)return;sceneChangedAt=t;
 }
 function gridKey(x,y){return (x<<16)|y}
 function simulation(dt){const cell=31, buckets=new Map();
+ if(!orbit.dragging){orbit.yaw*=.99;orbit.pitch*=.98;}
  for(let i=0;i<particles.length;i++){const p=particles[i],gx=Math.floor(p.x/cell),gy=Math.floor(p.y/cell),key=gridKey(gx,gy);let arr=buckets.get(key);if(!arr){arr=[];buckets.set(key,arr)}arr.push(i)}
- const d=clamp(dt/16.67,.45,2.0),spring=.042;
+ const d=clamp(dt/16.67,.45,2.0),spring=.056;
  for(let i=0;i<particles.length;i++){
   const p=particles[i],gx=Math.floor(p.x/cell),gy=Math.floor(p.y/cell);
   let nx=0,ny=0,avx=0,avy=0,sx=0,sy=0,n=0;
@@ -340,9 +343,16 @@ function simulation(dt){const cell=31, buckets=new Map();
     ax+=(avx-p.vx)*.009+(nx-p.x)*.00018+sx*.033;
     ay+=(avy-p.vy)*.009+(ny-p.y)*.00018+sy*.033;}
   // Anchor force guides the same moving flock into recognizable forms.
-  const drift=.5;let wobble=Math.sin(t*.00058+p.seed)*drift;
-  let tx=p.tx+Math.sin(t*.00051+p.seed*.67)*2+wobble;
-  let ty=p.ty+Math.cos(t*.00046+p.seed*.67)*2;
+  const drift=.35;let wobble=Math.sin(t*.00058+p.seed)*drift;
+   let tx=p.tx+Math.sin(t*.00051+p.seed*.67)*.85+wobble;
+   let ty=p.ty+Math.cos(t*.00046+p.seed*.67)*.85;
+   p.depth=0;
+   if(sceneIndex===1){
+    const yaw=Math.sin(t*.00042)*.20+orbit.yaw,px=tx-537;
+    tx=537+px*Math.cos(yaw)+p.depthSeed*8*Math.sin(yaw);
+    ty=280+(ty-280)*Math.cos(orbit.pitch*.2);
+    p.depth=clamp((px/205)*Math.sin(yaw)+p.depthSeed*.12,-1,1);
+   }
   if(sceneIndex===0){
     // A real animation of growth, not a one-frame tree silhouette:
     // root filaments lead, the trunk rises, finer branches arrive later.
@@ -365,8 +375,10 @@ function simulation(dt){const cell=31, buckets=new Map();
   }
   if(sceneIndex===2){
     // DNA twists gently without the agents ever leaving their strands.
-    const bend=Math.sin(t*.00048+(p.ty-96)*.016)*13;
-    tx+=bend;ty+=Math.sin(t*.00056+p.seed*.001)*2.3;
+    const phase=t*.00095+(p.ty-96)*.022;
+     tx+=Math.sin(phase)*12+orbit.yaw*7;
+     ty+=Math.sin(t*.00056+p.seed*.001)*1.3;
+     p.depth=Math.cos(phase)*.72;
   }
   if(sceneIndex===3){
     // Air flows across the entire frame. Each agent has its own evolving stream position.
@@ -402,28 +414,36 @@ function draw(time){const delta=lastTime?Math.min(38,time-lastTime):16.67;lastTi
  // Atmospheric halo at the heart of the flock.
  const glow=c.createRadialGradient(530,255,40,530,255,325);glow.addColorStop(0,'rgba(144,184,236,.11)');glow.addColorStop(1,'rgba(144,184,236,0)');c.fillStyle=glow;c.fillRect(185,30,670,480);
  for(let i=0;i<particles.length;i++){
-  const p=particles[i],color=sceneIndex===0 && i%7===0?'#e1aa53':PAL[p.shade];
-  const alpha=(i%9===0)?.80:.90;
-  c.globalAlpha=alpha;c.fillStyle=color;
-  let r=p.size*(i%19===0?1.5:1)*(pixelWidth<720?1.24:1);
-  c.beginPath();c.arc(p.x,p.y,r,0,Math.PI*2);c.fill();
-  if(sceneIndex===0 && i%43===0){
-    const travel=Math.max(0,Math.sin(t*.0066-(438-p.ty)*.07+p.seed*.008));
-    const flash=travel**8;
-    if(flash>.15){c.globalAlpha=flash*.85;c.fillStyle='#ffe9a4';c.beginPath();c.arc(p.x,p.y,1.3+3.2*flash,0,Math.PI*2);c.fill()}
+  const p=particles[i],index=sceneIndex===1?(p.lawTone===3?9:8):(sceneIndex===0&&i%7===0?9:p.shade);
+  const color=DETAIL_COLORS[index],depth=(sceneIndex===1||sceneIndex===2)?clamp(1+p.depth*.15,.8,1.2):1;
+  c.globalAlpha=clamp((.79+(p.depth+.8)*.085)*(i%9===0?.91:1),.5,1);
+  const r=p.size*(i%19===0?1.20:1)*(pixelWidth<720?1.16:1)*depth,w=r*3.5;
+  c.drawImage(DETAIL_SPRITES[index],p.x-w/2,p.y-w/2,w,w);
+  if(sceneIndex===0&&i%43===0){
+   const travel=Math.max(0,Math.sin(t*.0066-(438-p.ty)*.07+p.seed*.008)),flash=travel**8;
+   if(flash>.15){c.globalAlpha=flash*.8;c.fillStyle='#ffe9a4';c.beginPath();c.arc(p.x,p.y,1.3+2.7*flash,0,Math.PI*2);c.fill()}
   }
-  if(i%48===0){c.strokeStyle=color;c.lineWidth=.45;c.globalAlpha=.28;c.beginPath();c.moveTo(p.x,p.y);c.lineTo(p.x-p.vx*4,p.y-p.vy*4);c.stroke()}
+  if(i%55===0){c.strokeStyle=color;c.lineWidth=.4;c.globalAlpha=.22;c.beginPath();c.moveTo(p.x,p.y);c.lineTo(p.x-p.vx*4,p.y-p.vy*4);c.stroke()}
+ }
+ for(let i=shockRings.length-1;i>=0;i--){
+  const ring=shockRings[i];ring.age+=delta;
+  if(ring.age>760){shockRings.splice(i,1);continue}
+  c.globalAlpha=(1-ring.age/760)*.30;c.strokeStyle='#537fa5';c.lineWidth=1.3;
+  c.beginPath();c.arc(ring.x,ring.y,ring.age*.24,0,Math.PI*2);c.stroke();
  }
  c.globalAlpha=1;c.restore();animId=requestAnimationFrame(draw)
 }
 // The sculpture navigates itself. Pointer interaction only perturbs the flock and lake.
-canvas.addEventListener('pointermove',ev=>{const p=pointerToWorld(ev);mouse.vx=p.x-mouse.x;mouse.vy=p.y-mouse.y;mouse.x=p.x;mouse.y=p.y;mouse.active=true});
+canvas.addEventListener('pointermove',ev=>{const p=pointerToWorld(ev);mouse.vx=p.x-mouse.x;mouse.vy=p.y-mouse.y;mouse.x=p.x;mouse.y=p.y;mouse.active=true;
+ if(orbit.dragging){orbit.yaw=clamp(orbit.yaw+(ev.clientX-orbit.lastX)*.005,-.65,.65);orbit.pitch=clamp(orbit.pitch+(ev.clientY-orbit.lastY)*.003,-.55,.55);orbit.lastX=ev.clientX;orbit.lastY=ev.clientY;}
+});
 canvas.addEventListener('pointerleave',()=>{mouse.active=false;mouse.down=false});
-canvas.addEventListener('pointerdown',ev=>{if(ev.pointerType==='touch')return;const p=pointerToWorld(ev);mouse.down=true;shock={x:p.x,y:p.y,power:4}});
-window.addEventListener('pointerup',()=>{mouse.down=false});
+canvas.addEventListener('pointerdown',ev=>{if(ev.pointerType==='touch')return;const p=pointerToWorld(ev);mouse.down=true;shock={x:p.x,y:p.y,power:4};shockRings.push({x:p.x,y:p.y,age:0});if(shockRings.length>5)shockRings.shift();orbit.dragging=true;orbit.lastX=ev.clientX;orbit.lastY=ev.clientY;});
+window.addEventListener('pointerup',()=>{mouse.down=false;orbit.dragging=false});
+window.addEventListener('pointercancel',()=>{mouse.down=false;orbit.dragging=false});
 canvas.addEventListener('click',ev=>{const p=pointerToWorld(ev);shock={x:p.x,y:p.y,power:3.2}});
-window.addEventListener('resize',()=>{size();const count=pixelWidth<720?1100:1700;if(particles.length!==count)newParticles()});
-reduced.addEventListener('change',ev=>{reducedMotion=ev.matches});
+window.addEventListener('resize',()=>{size();const mobile=pixelWidth<720;const count=reducedMotion?(mobile?750:1150):(mobile?1300:2500);if(particles.length!==count)newParticles()});
+reduced.addEventListener('change',ev=>{reducedMotion=ev.matches;newParticles();if(reducedMotion){for(let i=0;i<220;i++)simulation(16.7)}});
 size();newParticles();sceneChangedAt=t;if(reducedMotion){for(let i=0;i<500;i++)simulation(16.7)}
 animId=requestAnimationFrame(draw);
 window.__warden={get scene(){return sceneIndex},get particles(){return particles},get autoplay(){return !reducedMotion}};
