@@ -52,6 +52,29 @@ for file in checkout-return.html order-management.html; do
   /bin/rm -f "$STAGING_ROOT/pages/$file"
 done
 
+# STAGING-ONLY ART TEST: draw the exact dot sculptures from the two owner-
+# supplied demos during Law (chapter 02) and Business (chapter 03).
+# The original homepage, chapters, captions, lake and all live files stay intact.
+# This script is inserted ONLY into protected copies after the HTML is copied.
+for homepage in "$STAGING_ROOT/index.html" "$STAGING_ROOT/es/index.html" "$STAGING_ROOT/fr/index.html" "$STAGING_ROOT/zh/index.html"; do
+  test -f "$homepage"
+  if ! grep -Fq 'living-field.js' "$homepage" || ! grep -Fq 'class="chapters"' "$homepage"; then
+    echo "ABORT: original five-chapter homepage missing: $homepage" >&2
+    exit 1
+  fi
+  if [[ "$homepage" == "$STAGING_ROOT/index.html" ]]; then
+    art_src="src/living-precision.js?v=20261110-arttest2"
+  else
+    art_src="../src/living-precision.js?v=20261110-arttest2"
+  fi
+  ART_SRC="$art_src" /usr/bin/perl -0777 -i -pe '
+    BEGIN { $script = $ENV{"ART_SRC"}; }
+    s#</body>#<script defer src="$script"></script></body>#i
+      or die "ABORT: staging homepage missing closing body tag";
+  ' "$homepage"
+  grep -Fq "$art_src" "$homepage" || { echo "ABORT: art test not installed: $homepage" >&2; exit 1; }
+done
+
 # Preview pages must not be indexed. Production configuration comes later.
 for html in "$STAGING_ROOT/index.html" "$STAGING_ROOT/404.html" "$STAGING_ROOT"/pages/*.html "$STAGING_ROOT"/es/*.html "$STAGING_ROOT"/fr/*.html "$STAGING_ROOT"/zh/*.html; do
   if ! grep -qi 'name="robots"' "$html"; then
