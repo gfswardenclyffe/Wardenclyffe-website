@@ -53,9 +53,11 @@ for file in checkout-return.html order-management.html; do
 done
 
 # STAGING-ONLY ART TEST: draw the exact dot sculptures from the two owner-
-# supplied demos during Law (chapter 02), Business (chapter 03), and
-# Living Heart (chapter 05 / Beyond).
-# The original homepage, chapters, captions, lake and all live files stay intact.
+# supplied demos during Law (chapter 02) and Business (chapter 03).
+# Original user-uploaded dot animations override Origin (chapter 01),
+# Technology (chapter 04) and Living Heart (chapter 05 / Beyond) on staging ONLY.
+# The new lighter-green Luminous Lake replaces the landscape canvas in staging only.
+# Original homepage source, chapter art, captions and all live files stay intact.
 # This script is inserted ONLY into protected copies after the HTML is copied.
 for homepage in "$STAGING_ROOT/index.html" "$STAGING_ROOT/es/index.html" "$STAGING_ROOT/fr/index.html" "$STAGING_ROOT/zh/index.html"; do
   test -f "$homepage"
@@ -64,16 +66,27 @@ for homepage in "$STAGING_ROOT/index.html" "$STAGING_ROOT/es/index.html" "$STAGI
     exit 1
   fi
   if [[ "$homepage" == "$STAGING_ROOT/index.html" ]]; then
-    art_src="src/living-precision.js?v=20261110-heart-preview1"
+    art_src="src/living-precision.js?v=20261110-heart-preview2"
+    dots_src="src/staging-dot-overlays.js?v=20261110-original-dots3"
+    lake_src="src/staging-luminous-lake-green.js?v=20261110-lake-green1"
   else
-    art_src="../src/living-precision.js?v=20261110-heart-preview1"
+    art_src="../src/living-precision.js?v=20261110-heart-preview2"
+    dots_src="../src/staging-dot-overlays.js?v=20261110-original-dots3"
+    lake_src="../src/staging-luminous-lake-green.js?v=20261110-lake-green1"
   fi
-  ART_SRC="$art_src" /usr/bin/perl -0777 -i -pe '
-    BEGIN { $script = $ENV{"ART_SRC"}; }
-    s#</body>#<script defer src="$script"></script></body>#i
+  ART_SRC="$art_src" DOTS_SRC="$dots_src" LAKE_SRC="$lake_src" /usr/bin/perl -0777 -i -pe '
+    BEGIN { $script = $ENV{"ART_SRC"}; $dots = $ENV{"DOTS_SRC"}; $lake = $ENV{"LAKE_SRC"}; }
+    s#</body>#<script defer src="$lake"></script><script defer src="$dots"></script><script defer src="$script"></script></body>#i
       or die "ABORT: staging homepage missing closing body tag";
   ' "$homepage"
   grep -Fq "$art_src" "$homepage" || { echo "ABORT: art test not installed: $homepage" >&2; exit 1; }
+  grep -Fq "$dots_src" "$homepage" || { echo "ABORT: original dot demos not installed: $homepage" >&2; exit 1; }
+  grep -Fq "$lake_src" "$homepage" || { echo "ABORT: green lake preview not installed: $homepage" >&2; exit 1; }
+  # Fail visibly if the staging-only controllers or models were not copied.
+  test -s "$STAGING_ROOT/src/staging-dot-overlays.js" || { echo "ABORT: missing updated dot controller" >&2; exit 1; }
+  grep -Fq "function createTree(canvas)" "$STAGING_ROOT/src/staging-dot-overlays.js" || { echo "ABORT: Tree of Life model missing" >&2; exit 1; }
+  grep -Fq "function createStarlings(canvas)" "$STAGING_ROOT/src/staging-dot-overlays.js" || { echo "ABORT: starling model missing" >&2; exit 1; }
+  grep -Fq "function createHeart(canvas)" "$STAGING_ROOT/src/staging-dot-overlays.js" || { echo "ABORT: anatomical heart model missing" >&2; exit 1; }
 done
 
 # Preview pages must not be indexed. Production configuration comes later.

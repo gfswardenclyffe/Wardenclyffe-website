@@ -1,5 +1,6 @@
 User-agent: *
 Disallow: /wardenclyffe-staging/
+Disallow: /wardenclyffe-release-20261110/
 Disallow: /wp-admin/
 Disallow: /wp-login.php
 Disallow: /xmlrpc.php
