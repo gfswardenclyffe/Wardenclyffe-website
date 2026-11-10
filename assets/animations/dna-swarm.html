@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Living DNA</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:#f4f2ee}
+body{overflow:hidden;touch-action:none;font-family:system-ui,sans-serif}
+canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.hint{position:fixed;left:0;right:0;bottom:calc(20px + env(safe-area-inset-bottom,0px));text-align:center;font-size:14px;color:#7a766d;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="DNA double helix made of living dots"></canvas>
+<div class="hint">Move to part the swarm. Click to burst. Drag to spin.</div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,K0=reduce?0.25:1;
+let W,H,PR,SC,CX,CY;
+function resize(){PR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*PR;cv.height=H*PR;ctx.setTransform(PR,0,0,PR,0,0);
+  SC=Math.min(H/8.2,W/3.4);CX=W/2;CY=H/2;}
+addEventListener('resize',resize);resize();
+
+// ---- colour sprites (glowing dots)
+const COLS=['#2f6bff','#ff3b3b','#ff7ac8','#f5b82e','#ffffff'];   // blue, red, pink, golden, white
+const spr=COLS.map(c=>{const s=document.createElement('canvas');s.width=s.height=64;const x=s.getContext('2d');
+  x.beginPath();x.arc(32,32,29,0,6.283);x.fillStyle=c;x.fill();
+  x.lineWidth=2;x.strokeStyle='rgba(60,55,45,.22)';x.stroke();return s;});
+
+// ---- dots: two backbone strands + base-pair rungs
+const HEIGHT=6.6,RAD=1.1,TWIST=1.35,M=520,RUNGS=34,PER=7;
+const D=[];
+for(let s=0;s<2;s++)for(let i=0;i<M;i++)D.push({k:s,y:-HEIGHT/2+(i+Math.random()*.6)*HEIGHT/M,u:0,c:s});
+for(let r=0;r<RUNGS;r++){const ry=-HEIGHT/2+(r+.5)*HEIGHT/RUNGS,pair=Math.random()<.5?[2,3]:[4,0],flip=Math.random()<.5;
+  for(let j=0;j<PER;j++){const u=.1+.8*(j+.5)/PER;D.push({k:2,y:ry,u,c:(u<.5)!==flip?pair[0]:pair[1]});}}
+const N=D.length;
+const X=new Float32Array(N),Y=new Float32Array(N),Z=new Float32Array(N),VX=new Float32Array(N),VY=new Float32Array(N),VZ=new Float32Array(N),PH=new Float32Array(N),SX=new Float32Array(N),SY=new Float32Array(N);
+for(let i=0;i<N;i++){X[i]=(Math.random()-.5)*6;Y[i]=(Math.random()-.5)*6;Z[i]=(Math.random()-.5)*6;PH[i]=Math.random()*6.283;}
+
+// ---- spatial grid (the boids optimisation): cell = neighbour radius
+const G=20,CELL=.5,head=new Int32Array(G*G*G),nxt=new Int32Array(N);
+const cell=v=>Math.max(0,Math.min(G-1,Math.floor(v/CELL+G/2)));
+
+// ---- interaction
+let mx=-9999,my=-9999,rot=0,rotV=0,pitch=.22,drag=false,lx=0,ly=0,bursts=[],burstQ=null;
+cv.addEventListener('pointermove',e=>{mx=e.clientX;my=e.clientY;if(drag){rotV=(e.clientX-lx)*.012;rot+=rotV;pitch=Math.max(-.9,Math.min(.9,pitch+(e.clientY-ly)*.005));lx=e.clientX;ly=e.clientY;}});
+cv.addEventListener('pointerdown',e=>{drag=true;lx=e.clientX;ly=e.clientY;mx=e.clientX;my=e.clientY;cv.setPointerCapture(e.pointerId);burstQ={x:e.clientX,y:e.clientY};bursts.push({x:e.clientX,y:e.clientY,t:0});});
+cv.addEventListener('pointerup',()=>drag=false);
+cv.addEventListener('pointerleave',()=>{if(!drag){mx=my=-9999;}});
+
+const stars=Array.from({length:110},()=>({x:Math.random(),y:Math.random(),p:Math.random()*6.28,s:Math.random()*1.4+.3}));
+const sm=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x);};
+
+let last=performance.now(),T=0;
+function frame(now){
+  const dt=Math.min((now-last)/1000,.033);last=now;T+=dt;
+  // auto-rotation + inertia
+  if(!drag){rot+=dt*.5*K0+rotV;rotV*=.95;}
+  // periodic "loose swarm" phase: dots flock freely, then re-form the helix
+  const cyc=(T%13)/4.2,loose=cyc<1?Math.pow(Math.sin(Math.PI*cyc),2):0;
+  const hb=Math.pow(Math.max(0,Math.sin(T*2.2)),8)*.5+Math.pow(Math.max(0,Math.sin(T*2.2-.9)),8)*.3;
+  const R=RAD*(1+.03*hb*K0),cp=Math.cos(pitch),sp=Math.sin(pitch);
+  const f=9,perspective=z=>f/(f-z);
+
+  // build grid
+  head.fill(-1);
+  for(let i=0;i<N;i++){const c=(cell(X[i])*G+cell(Y[i]))*G+cell(Z[i]);nxt[i]=head[c];head[c]=i;}
+
+  // one-shot burst impulse
+  if(burstQ){for(let i=0;i<N;i++){const dx=SX[i]-burstQ.x,dy=SY[i]-burstQ.y,d=Math.hypot(dx,dy)+1,q=Math.max(0,1-d/380);
+      const p=q*q*16/Math.max(d/SC,.3);VX[i]+=dx/d*p*(.6+Math.random()*.8);VY[i]+=dy/d*p*(.6+Math.random()*.8);VZ[i]+=(Math.random()-.5)*p*.8;}burstQ=null;}
+
+  const Kk=14*(1-.9*loose),Dd=5.2-2.6*loose;
+  for(let i=0;i<N;i++){
+    const d=D[i];let th=d.y*TWIST+rot+(d.k===1?Math.PI:0),px,pz;
+    if(d.k===2){th=d.y*TWIST+rot;const m=1-2*d.u;px=R*Math.cos(th)*m;pz=R*Math.sin(th)*m;}else{px=R*Math.cos(th);pz=R*Math.sin(th);}
+    const py=d.y,tx=px,ty=py*cp-pz*sp,tz=py*sp+pz*cp;
+    const ox=Math.sin(T*.9+PH[i]*3)*.05,oy=Math.cos(T*1.1+PH[i]*2)*.05,oz=Math.sin(T*.7+PH[i])*.05;
+    let ax=(tx+ox-X[i])*Kk-VX[i]*Dd,ay=(ty+oy-Y[i])*Kk-VY[i]*Dd,az=(tz+oz-Z[i])*Kk-VZ[i]*Dd;
+    // boids: separation + alignment among neighbours
+    let sx=0,sy=0,sz=0,avx=0,avy=0,avz=0,n=0;
+    const cx=cell(X[i]),cy=cell(Y[i]),cz=cell(Z[i]);
+    for(let a=Math.max(0,cx-1);a<=Math.min(G-1,cx+1);a++)for(let b=Math.max(0,cy-1);b<=Math.min(G-1,cy+1);b++)for(let c=Math.max(0,cz-1);c<=Math.min(G-1,cz+1);c++){
+      for(let j=head[(a*G+b)*G+c];j>=0;j=nxt[j]){if(j===i)continue;
+        const dx=X[i]-X[j],dy=Y[i]-Y[j],dz=Z[i]-Z[j],q=dx*dx+dy*dy+dz*dz;
+        if(q<.25){n++;avx+=VX[j];avy+=VY[j];avz+=VZ[j];if(q<.045){const w=.0016/(q+.004);sx+=dx*w;sy+=dy*w;sz+=dz*w;}}}}
+    if(n){ax+=sx+(avx/n-VX[i])*(1.2+3*loose);ay+=sy+(avy/n-VY[i])*(1.2+3*loose);az+=sz+(avz/n-VZ[i])*(1.2+3*loose);}
+    // swarm swirl + wander during loose phase, gentle shimmer otherwise
+    ax+=-Z[i]*1.1*loose+Math.sin(T*1.7+PH[i]*7)*(.5+2*loose)*K0;
+    ay+=Math.cos(T*1.3+PH[i]*5)*(.5+2*loose)*K0;
+    az+=X[i]*1.1*loose+Math.sin(T*1.1+PH[i]*3)*.5*K0;
+    // cursor parts the swarm
+    const mdx=SX[i]-mx,mdy=SY[i]-my,md=Math.hypot(mdx,mdy);
+    if(md<170){const q=1-md/170,p=q*q*90/(md+20)*SC/100;ax+=mdx/(md+1)*p*20;ay+=mdy/(md+1)*p*20;az+=(Math.random()-.5)*q*8;}
+    VX[i]+=ax*dt;VY[i]+=ay*dt;VZ[i]+=az*dt;
+    const sp2=VX[i]*VX[i]+VY[i]*VY[i]+VZ[i]*VZ[i];if(sp2>196){const k=14/Math.sqrt(sp2);VX[i]*=k;VY[i]*=k;VZ[i]*=k;}
+    X[i]+=VX[i]*dt;Y[i]+=VY[i]*dt;Z[i]+=VZ[i]*dt;
+    const s=perspective(Z[i]);SX[i]=CX+X[i]*SC*s;SY[i]=CY+Y[i]*SC*s;
+  }
+
+  // ---- draw (trails via fade)
+  ctx.clearRect(0,0,W,H);
+  for(let i=0;i<N;i++){
+    const d=D[i],s=perspective(Z[i]),depth=Math.max(.25,Math.min(1,(Z[i]+RAD*1.6)/(RAD*3.2)));
+    const size=SC*.05*s*(d.k===2?.85:1);
+    ctx.globalAlpha=.6+.4*depth;
+    ctx.drawImage(spr[d.c],SX[i]-size,SY[i]-size,size*2,size*2);
+  }
+  // click shockwaves
+  ctx.globalAlpha=1;
+  for(let b=bursts.length-1;b>=0;b--){const o=bursts[b];o.t+=dt;if(o.t>1){bursts.splice(b,1);continue;}
+    ctx.strokeStyle=`rgba(90,110,160,${(1-o.t)*.5})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(o.x,o.y,o.t*SC*2.2,0,6.283);ctx.stroke();}
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
