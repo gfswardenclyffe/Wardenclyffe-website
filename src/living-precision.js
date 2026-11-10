@@ -385,6 +385,9 @@ function syncScene(){
  if(scene===lastScene)return scene;
  lastScene=scene;
  const activeLaw=scene===1,activeDNA=scene===2,activeHeart=scene===4&&!window.WARDEN_STAGING_DOT_OVERRIDES;
+ // Keep the original homepage sculpture hidden when a staging-only source-faithful
+ // dot chapter owns the scene. Otherwise it reappears behind Tree/Starlings/Heart.
+ const stagingDotsOwnScene=Boolean(window.WARDEN_STAGING_DOT_OVERRIDES && (scene===0||scene===3||scene===4));
  if(activeHeart&&!heartModel)heartModel=createHeart(heartCanvas);
  lawCanvas.style.display=activeLaw?'block':'none';
  dnaCanvas.style.display=activeDNA?'block':'none';
@@ -392,8 +395,8 @@ function syncScene(){
  lawCanvas.style.pointerEvents=activeLaw?'auto':'none';
  dnaCanvas.style.pointerEvents=activeDNA?'auto':'none';
  heartCanvas.style.pointerEvents=activeHeart?'auto':'none';
- primary.style.pointerEvents=(activeLaw||activeDNA||activeHeart)?'none':'auto';
- primary.style.opacity=(activeLaw||activeDNA||activeHeart)?'0':'1';
+ primary.style.pointerEvents=(activeLaw||activeDNA||activeHeart||stagingDotsOwnScene)?'none':'auto';
+ primary.style.opacity=(activeLaw||activeDNA||activeHeart||stagingDotsOwnScene)?'0':'1';
  if(activeLaw)lawModel.resize();
  if(activeDNA)dnaModel.resize();
  if(activeHeart)heartModel.resize();
