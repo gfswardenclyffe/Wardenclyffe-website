@@ -65,11 +65,11 @@ for homepage in "$STAGING_ROOT/index.html" "$STAGING_ROOT/es/index.html" "$STAGI
     exit 1
   fi
   if [[ "$homepage" == "$STAGING_ROOT/index.html" ]]; then
-    art_src="src/living-precision.js?v=20261110-heart-preview1"
-    dots_src="src/staging-dot-overlays.js?v=20261110-original-dots2"
+    art_src="src/living-precision.js?v=20261110-heart-preview2"
+    dots_src="src/staging-dot-overlays.js?v=20261110-original-dots3"
   else
-    art_src="../src/living-precision.js?v=20261110-heart-preview1"
-    dots_src="../src/staging-dot-overlays.js?v=20261110-original-dots2"
+    art_src="../src/living-precision.js?v=20261110-heart-preview2"
+    dots_src="../src/staging-dot-overlays.js?v=20261110-original-dots3"
   fi
   ART_SRC="$art_src" DOTS_SRC="$dots_src" /usr/bin/perl -0777 -i -pe '
     BEGIN { $script = $ENV{"ART_SRC"}; $dots = $ENV{"DOTS_SRC"}; }
@@ -78,6 +78,11 @@ for homepage in "$STAGING_ROOT/index.html" "$STAGING_ROOT/es/index.html" "$STAGI
   ' "$homepage"
   grep -Fq "$art_src" "$homepage" || { echo "ABORT: art test not installed: $homepage" >&2; exit 1; }
   grep -Fq "$dots_src" "$homepage" || { echo "ABORT: original dot demos not installed: $homepage" >&2; exit 1; }
+  # Fail visibly if the staging-only controllers or models were not copied.
+  test -s "$STAGING_ROOT/src/staging-dot-overlays.js" || { echo "ABORT: missing updated dot controller" >&2; exit 1; }
+  grep -Fq "function createTree(canvas)" "$STAGING_ROOT/src/staging-dot-overlays.js" || { echo "ABORT: Tree of Life model missing" >&2; exit 1; }
+  grep -Fq "function createStarlings(canvas)" "$STAGING_ROOT/src/staging-dot-overlays.js" || { echo "ABORT: starling model missing" >&2; exit 1; }
+  grep -Fq "function createHeart(canvas)" "$STAGING_ROOT/src/staging-dot-overlays.js" || { echo "ABORT: anatomical heart model missing" >&2; exit 1; }
 done
 
 # Preview pages must not be indexed. Production configuration comes later.
